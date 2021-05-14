@@ -1,0 +1,29 @@
+{
+  "name": "agora-telegram-runner",
+  "version": "1.0.0",
+  "description": "A Telegram bot for the Agora Space platform",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgoraSpaceDAO/telegram-runner.git"
+  },
+  "keywords": [
+    "agora",
+    "space",
+    "telegram",
+    "tokenized",
+    "community"
+  ],
+  "author": "shronk",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AgoraSpaceDAO/telegram-runner/issues"
+  },
+  "homepage": "https://github.com/AgoraSpaceDAO/telegram-runner#readme",
+  "dependencies": {
+    "telegraf": "^4.3.0"
+  }
+}
