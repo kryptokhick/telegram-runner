@@ -15,6 +15,13 @@ const tg = bot.telegram
 ////       Helper functionss      ////
 //////////////////////////////////////
 
+async function isAdmin(userId, groupId) {
+  for (const admin of await tg.getChatAdministrators(groupId))
+    if (admin.user.id.toString() === userId.toString()) return true
+
+  return false
+}
+
 /**
  * A simple function which greets every user
  * when they start a conversation with the bot.
@@ -337,100 +344,11 @@ bot.on("text", async (ctx) => {
   }
 })
 
-//////////////////////////////////////
-////    Contract initialization   ////
-//////////////////////////////////////
+// start the bot
+await bot.launch()
 
-/**
- * Simple helper function to make API requests.
- * @param {String} url is the url we want to fetch data from
- * @returns {Promise<JSON>} response body
- */
-function doRequest(url) {
-  return new Promise(function (resolve, reject) {
-    request(url, function (error, res, body) {
-      if (!error && res.statusCode == 200)
-        resolve(JSON.parse(JSON.parse(body).result))
-      else reject(error)
-    })
-  })
-}
+// enable graceful stop
+process.once("SIGINT", () => bot.stop("SIGINT"))
+process.once("SIGTERM", () => bot.stop("SIGTERM"))
 
-/**
- * Simple helper function to get the ABI of a smart contract.
- * @param {String} address is the address of the smart contract
- * @returns the ABI of the smart contract
- */
-async function getAbi(address) {
-  return await doRequest(
-    `${ETHSCAN_TESTNET_API}?${GET_ABI}&address=${address}&apikey=${ETH_API_KEY}`
-  )
-}
-
-/**
- * Simple helper to wrap the initialization of the provider and contracts.
- */
-async function initContracts() {
-  console.log("Initializing Ethers provider...")
-
-  // initializing Ethers
-  const provider = new ethers.providers.InfuraProvider("ropsten", INF_API_KEY)
-
-  console.log("Getting contracts...")
-
-  for (const group of await db.get("groups")) {
-    // initializing the pool and token contracts
-    poolContracts[group.id] = new ethers.Contract(
-      group.contractAddress,
-      await getAbi(group.contractAddress),
-      provider
-    )
-    tokenContracts[group.id] = new ethers.Contract(
-      group.tokenAddress,
-      await getAbi(group.tokenAddress),
-      provider
-    )
-  }
-}
-
-/**
- * Sets up listeners for the given group.
- * @param {String} groupId is the id of the group
- */
-async function setupListeners(groupId) {
-  const poolContract = poolContracts[groupId]
-  const tokenContract = tokenContracts[groupId]
-
-  // listen on deposit and withdraw events
-  tokenContract.on("Transfer", async (from, to, amount) => {
-    const quant = amount / 10 ** (await tokenContract.decimals())
-
-    console.log(`${from} sent ${quant} ${await tokenContract.name()} to ${to}`)
-
-    const fromUser = await getUserByAddress(from, groupId)
-
-    if (fromUser !== undefined) {
-      const fromId = fromUser.id
-
-      if (!(await userHasInvestedEnoughTokens(fromId, groupId)))
-        await kickUser(fromId, groupId, "they did't have enough tokens")
-    } else console.log(`User with address ${from} is not in the database`)
-  })
-}
-
-initContracts().then(async () => {
-  console.log("Starting the bot...")
-
-  // start the bot
-  await bot.launch()
-
-  console.log("Starting listeners...")
-
-  for (const group of await db.get("groups")) await setupListeners(group.id)
-
-  // enable graceful stop
-  process.once("SIGINT", () => bot.stop("SIGINT"))
-  process.once("SIGTERM", () => bot.stop("SIGTERM"))
-
-  console.log("Medousa is alive...")
-})
+console.log("Medousa is alive...")
