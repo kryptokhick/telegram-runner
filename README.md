@@ -31,7 +31,11 @@ BOT_API_KEY="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
 Run the bot:
 
 ```bash
-ts-node src/bot.ts
+# for development:
+npm run dev
+
+# for production:
+npm run build && npm run prod
 ```
 
 ## Documentation
