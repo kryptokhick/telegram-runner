@@ -1,10 +1,43 @@
 {
   "name": "agora-telegram-runner",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A Telegram bot for the Agora Space platform",
-  "main": "bot.js",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "ts-node-dev src/Main.ts",
+    "build": "tsc",
+    "prod": "node build/src/Main.js"
+  },
+  "dependencies": {
+    "dotenv": "^9.0.2",
+    "telegraf": "^4.3.0",
+    "winston": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^15.3.1",
+    "@typescript-eslint/eslint-plugin": "^4.24.0",
+    "@typescript-eslint/parser": "^4.24.0",
+    "eslint": "^7.26.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.23.3",
+    "husky": "^4.3.8",
+    "lint-staged": "^11.0.0",
+    "prettier": "^2.3.0",
+    "pretty-quick": "^3.1.0",
+    "ts-node": "^9.1.1",
+    "ts-node-dev": "^1.1.6",
+    "tslib": "^2.2.0",
+    "typescript": "^4.2.4"
+  },
+  "lint-staged": {
+    "*.{js,ts}": "eslint --fix --cache --cache-location 'node_modules/.cache/.eslintcache'",
+    "*.{js,ts,md}": "pretty-quick --staged"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npx lint-staged"
+    }
   },
   "repository": {
     "type": "git",
@@ -14,16 +47,16 @@
     "agora",
     "space",
     "telegram",
+    "bot",
+    "crypto",
+    "token",
     "tokenized",
     "community"
   ],
-  "author": "shronk",
+  "author": "ZGEN",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/AgoraSpaceDAO/telegram-runner/issues"
   },
-  "homepage": "https://github.com/AgoraSpaceDAO/telegram-runner#readme",
-  "dependencies": {
-    "telegraf": "^4.3.0"
-  }
+  "homepage": "https://github.com/AgoraSpaceDAO/telegram-runner#readme"
 }
