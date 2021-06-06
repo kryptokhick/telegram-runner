@@ -9,6 +9,7 @@
     "prod": "node build/src/Main.js"
   },
   "dependencies": {
+    "axios": "^0.21.1",
     "dotenv": "^9.0.2",
     "telegraf": "^4.3.0",
     "winston": "^3.3.3"

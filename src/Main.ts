@@ -1,9 +1,9 @@
-import { Telegraf, Telegram } from "telegraf";
-import * as dotenv from "dotenv";
-import logger from "./utils/logger";
+/* eslint no-underscore-dangle: ["error", { "allowAfterThis": true }] */
 
-if (dotenv.config().error)
-  throw new Error("Couldn't find .env file or volumes in compose.");
+import { Telegraf, Telegram } from "telegraf";
+import * as TGEvents from "./TGEvents";
+import logger from "./utils/logger";
+import config from "./Config";
 
 export default class Main {
   private static tg: Telegram;
@@ -13,67 +13,54 @@ export default class Main {
   }
 
   static start(): void {
-    // Telegram Bot API token
-    const token = process.env.TELEGRAM_TOKEN;
+    // load env variables
+    config.setup();
 
-    if (!token) {
-      try {
-        throw new Error("Telegram BOT API token cannot be empty!");
-      } catch (error) {
-        logger.error(error);
-        process.exit(1);
-      }
-    } else {
-      // initializing the chatbot with our API token
-      const bot = new Telegraf(token);
+    // initializing the chatbot with our API token
+    const bot = new Telegraf(config.botToken);
 
-      // telegram client instance
-      this.tg = bot.telegram;
+    // telegram client instance
+    this.tg = bot.telegram;
 
-      bot.use(async (ctx, next) => {
-        const start = Date.now();
-        return next().then(() => {
-          const ms = Date.now() - start;
-          logger.verbose(`response time ${ms}ms`);
+    bot.use(async (ctx, next) => {
+      const start = Date.now();
+      return next().then(async () => {
+        const ms = Date.now() - start;
+        logger.verbose(`response time ${ms}ms`);
 
-          const update = ctx.update as unknown as {
-            chat_member: { invite_link: { invite_link: string } };
-          };
+        const update = ctx.update as any;
 
-          if (update.chat_member && update.chat_member.invite_link) {
-            // TODO: check if the user fullfills the requirements
-            // TODO: welcome the user
-            logger.debug(update.chat_member.invite_link.invite_link);
-          }
-        });
+        if (update.chat_member && update.chat_member.invite_link) {
+          const member = update.chat_member;
+          const invLink = member.invite_link.invite_link;
+
+          // TODO: tell the HUB that a new user joined the group
+          await TGEvents.onUserJoined(invLink, member.from.id, member.chat.id);
+
+          console.log(invLink, member.from.id, member.chat.id);
+
+          // TODO: check if the user fullfills the requirements
+          await TGEvents.onUserRemoved(member.from.id, member.chat.id);
+          // TODO: otherwise welcome the user
+          logger.debug(invLink);
+        }
       });
+    });
 
-      // listening on new chat with a Telegram user
-      bot.start(async (ctx) => {
-        if (ctx.message.chat.id > 0)
-          // TODO: check whether the user is in the database
-          await ctx.replyWithMarkdown(
-            [
-              "I'm sorry, I couldn't find you in the database.",
-              "Make sure to register [here](https://agora.space/)."
-            ].join("\n")
-          );
-      });
+    // listening on new chat with a Telegram user
+    bot.start((ctx) => TGEvents.onChatStart(ctx));
 
-      // a user left the group
-      bot.on("left_chat_member", async (ctx) =>
-        ctx.reply(`Bye, ${ctx.message.left_chat_member.first_name} 😢`)
-      );
+    // a user left the group
+    bot.on("left_chat_member", (ctx) => TGEvents.onUserLeft(ctx));
 
-      // start the bot
-      bot.launch({ allowedUpdates: ["chat_member", "message"] });
+    // start the bot
+    bot.launch({ allowedUpdates: ["chat_member", "message"] });
 
-      // enable graceful stop
-      process.once("SIGINT", () => bot.stop("SIGINT"));
-      process.once("SIGTERM", () => bot.stop("SIGTERM"));
+    // enable graceful stop
+    process.once("SIGINT", () => bot.stop("SIGINT"));
+    process.once("SIGTERM", () => bot.stop("SIGTERM"));
 
-      logger.verbose("Medousa is alive...");
-    }
+    logger.verbose("Medousa is alive...");
   }
 }
 
