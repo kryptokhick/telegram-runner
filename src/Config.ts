@@ -1,11 +1,7 @@
 /* eslint no-underscore-dangle: ["error", { "allowAfterThis": true }] */
 
 import * as dotenv from "dotenv";
-
-interface Api {
-  prefix: string;
-  port: string | number;
-}
+import { Api } from "./types/Api";
 
 export default class Config {
   private static _botToken: string;
