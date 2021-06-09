@@ -1,17 +1,23 @@
-export type Api = {
+type Api = {
   prefix: string;
   port: string | number;
 };
 
-export type InviteResult = {
+type ManageGroupsParam = {
+  userId: string;
+  groupIds: string[];
+  message: string;
+};
+
+type InviteResult = {
   code: string;
 };
 
-export type ErrorResult = {
+type ErrorResult = {
   errors: { msg: string; value: string[] }[];
 };
 
-export class ActionError extends Error {
+class ActionError extends Error {
   ids: string[];
 
   constructor(message: string, ids: string[]) {
@@ -19,3 +25,5 @@ export class ActionError extends Error {
     this.ids = ids;
   }
 }
+
+export { Api, ManageGroupsParam, InviteResult, ErrorResult, ActionError };
