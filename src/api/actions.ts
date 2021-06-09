@@ -2,21 +2,17 @@ import Main from "../Main";
 import { ManageGroupsParam, InviteResult } from "./types";
 import { UnixTime } from "../utils/utils";
 
-async function generateInvite(groupId: string): Promise<InviteResult> {
-  return {
-    code: (
-      await Main.Client.createChatInviteLink(groupId, {
-        expire_date: UnixTime(new Date()) + 600,
-        member_limit: 1
-      })
-    ).invite_link
-  };
-}
+const generateInvite = (groupId: string): Promise<InviteResult> => new Promise((resolve) =>
+    Main.Client.createChatInviteLink(groupId, {
+      expire_date: UnixTime(new Date()) + 600,
+      member_limit: 1
+    }).then((invite) => resolve({ code: invite.invite_link }))
+  );
 
-async function manageGroups(
+const manageGroups = (
   params: ManageGroupsParam,
   isUpgrade: boolean
-): Promise<boolean> {
+): Promise<boolean> => {
   const invites: string[] = [];
 
   params.groupIds.forEach(async (groupId) => {
@@ -34,8 +30,9 @@ async function manageGroups(
 
     Main.Client.sendMessage(params.userId, message);
   }
+  // TODO: use the message that we get in the parameter
 
-  return true;
-}
+  return new Promise((resolve) => resolve(true));
+};
 
 export { manageGroups, generateInvite };

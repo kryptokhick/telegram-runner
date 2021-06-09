@@ -3,7 +3,7 @@
 import { Telegraf, Telegram } from "telegraf";
 import * as TGEvents from "./service";
 import logger from "./utils/logger";
-import config from "./Config";
+import config from "./config";
 import api from "./api/api";
 
 export default class Main {
@@ -14,14 +14,11 @@ export default class Main {
   }
 
   static start(): void {
-    // load env variables
-    config.setup();
-
     // Start listener
     api();
 
     // initializing the chatbot with our API token
-    const bot = new Telegraf(config.botToken);
+    const bot = new Telegraf(config.telegramToken);
 
     // telegram client instance
     this.tg = bot.telegram;

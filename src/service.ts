@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import logger from "./utils/logger";
-import config from "./Config";
+import config from "./config";
 
 const API_BASE_URL = config.hubUrl;
 const PLATFORM = "telegram";

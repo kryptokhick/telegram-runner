@@ -1,5 +1,5 @@
 import express from "express";
-import config from "../Config";
+import config from "../config";
 import logger from "../utils/logger";
 import router from "./router";
 

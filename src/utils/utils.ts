@@ -1,11 +1,9 @@
 import logger from "./logger";
 import { ActionError, ErrorResult } from "../api/types";
 
-export function UnixTime(date: Date): number {
-  return Math.floor((date as unknown as number) / 1000);
-}
+const UnixTime = (date: Date): number => Math.floor((date as unknown as number) / 1000);
 
-export function getErrorResult(error: Error): ErrorResult {
+const getErrorResult = (error: Error): ErrorResult => {
   let errorMsg: string;
   let ids: string[];
 
@@ -26,4 +24,6 @@ export function getErrorResult(error: Error): ErrorResult {
       }
     ]
   };
-}
+};
+
+export { UnixTime, getErrorResult };

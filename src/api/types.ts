@@ -1,8 +1,3 @@
-type Api = {
-  prefix: string;
-  port: string | number;
-};
-
 type ManageGroupsParam = {
   userId: string;
   groupIds: string[];
@@ -26,4 +21,4 @@ class ActionError extends Error {
   }
 }
 
-export { Api, ManageGroupsParam, InviteResult, ErrorResult, ActionError };
+export { ManageGroupsParam, InviteResult, ErrorResult, ActionError };
