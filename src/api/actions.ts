@@ -13,4 +13,4 @@ async function generateInvite(groupId: string): Promise<InviteResult> {
   };
 }
 
-export default { generateInvite };
+export { generateInvite };

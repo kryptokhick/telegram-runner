@@ -1,9 +1,10 @@
 /* eslint no-underscore-dangle: ["error", { "allowAfterThis": true }] */
 
 import { Telegraf, Telegram } from "telegraf";
-import * as TGEvents from "./TGEvents";
+import * as TGEvents from "./service";
 import logger from "./utils/logger";
 import config from "./Config";
+import api from "./api/api";
 
 export default class Main {
   private static tg: Telegram;
@@ -15,6 +16,9 @@ export default class Main {
   static start(): void {
     // load env variables
     config.setup();
+
+    // Start listener
+    api();
 
     // initializing the chatbot with our API token
     const bot = new Telegraf(config.botToken);
@@ -36,8 +40,6 @@ export default class Main {
 
           // TODO: tell the HUB that a new user joined the group
           await TGEvents.onUserJoined(invLink, member.from.id, member.chat.id);
-
-          console.log(invLink, member.from.id, member.chat.id);
 
           // TODO: check if the user fullfills the requirements
           await TGEvents.onUserRemoved(member.from.id, member.chat.id);
