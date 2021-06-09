@@ -1,25 +1,31 @@
 import { Router } from "express";
 import controller from "./controller";
-// import validators from "./validators";
+import validators from "./validators";
 
 const createRouter = () => {
   const router: Router = Router();
 
   router.post(
     "/upgrade",
-    // TODO: add validators
+    validators.bodyTelegramId("groupId"),
+    validators.bodyTelegramId("userId"),
+    validators.groupsValidator,
+    validators.messageValidator,
     controller.upgrade
   );
 
   router.post(
     "/downgrade",
-    // TODO: add validators
+    validators.bodyTelegramId("groupId"),
+    validators.bodyTelegramId("userId"),
+    validators.groupsValidator,
+    validators.messageValidator,
     controller.downgrade
   );
 
   router.get(
-    "/invite/:guildId",
-    // TODO: add validators
+    "/invite/:groupId",
+    validators.bodyTelegramId("groupId"),
     controller.getInvite
   );
 
