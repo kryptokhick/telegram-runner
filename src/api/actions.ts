@@ -2,7 +2,8 @@ import Main from "../Main";
 import { ManageGroupsParam, InviteResult } from "./types";
 import { UnixTime } from "../utils/utils";
 
-const generateInvite = (groupId: string): Promise<InviteResult> => new Promise((resolve) =>
+const generateInvite = (groupId: string): Promise<InviteResult> =>
+  new Promise((resolve) =>
     Main.Client.createChatInviteLink(groupId, {
       expire_date: UnixTime(new Date()) + 600,
       member_limit: 1
