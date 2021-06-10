@@ -4,7 +4,7 @@ import { manageGroups, generateInvite } from "./actions";
 import { ManageGroupsParam } from "./types";
 import { getErrorResult } from "../utils/utils";
 
-const contreoller = {
+const controller = {
   upgrade: (req: Request, res: Response): void => {
     const errors = validationResult(req);
 
@@ -66,4 +66,4 @@ const contreoller = {
   }
 };
 
-export { contreoller };
+export { controller };
