@@ -18,6 +18,37 @@ const onChatStart = (ctx: any): void => {
     );
 };
 
+const onHelp = (ctx: any): void => {
+  const helpHeader =
+    "Hello there! My name is Medousa.\n" +
+    "I'm part of the [Agora](https://agora-space.vercel.app/) project and " +
+    "I am your personal assistant.\n" +
+    "I will always let you know whether you can join a higher group or " +
+    "whether you were kicked from a group.\n";
+
+  let commandsList = "/help - show instructions\n/ping - check if I'm alive\n";
+
+  const helpFooter =
+    "For more details about me read the documentation on " +
+    "[github](https://github.com/AgoraSpaceDAO/telegram-runner).";
+
+  // DM
+  if (ctx.message.chat.id >= 0) {
+    commandsList +=
+      "/leave - you have to choose which community you want " +
+      "to leave and I'll do the rest\n";
+  } // group chat
+  else {
+    commandsList +=
+      "/leave - you will be removed from this community\n" +
+      "/info - get relevant information about this community\n";
+  }
+
+  ctx.replyWithMarkdown(`${helpHeader}\n${commandsList}\n${helpFooter}`, {
+    disable_web_page_preview: true
+  });
+};
+
 const onUserJoined = (
   refId: string,
   idFromPlatform: string,
@@ -49,4 +80,4 @@ const onUserRemoved = (idFromPlatform: string, sender: string): void => {
     .catch(logger.error);
 };
 
-export { onChatStart, onUserJoined, onUserLeft, onUserRemoved };
+export { onChatStart, onHelp, onUserJoined, onUserLeft, onUserRemoved };

@@ -49,6 +49,9 @@ export default class Main {
     // listening on new chat with a Telegram user
     bot.start((ctx) => TGEvents.onChatStart(ctx));
 
+    // user uses the help command
+    bot.help((ctx) => TGEvents.onHelp(ctx));
+
     // a user left the group
     bot.on("left_chat_member", (ctx) => TGEvents.onUserLeft(ctx));
 
