@@ -1,8 +1,9 @@
 /* eslint no-underscore-dangle: ["error", { "allowAfterThis": true }] */
 
 import axios from "axios";
-import logger from "./utils/logger";
+import { CommunityUrlResult } from "./api/types";
 import config from "./config";
+import logger from "./utils/logger";
 
 const API_BASE_URL = config.backendUrl;
 const PLATFORM = "telegram";
@@ -35,6 +36,7 @@ const onHelp = (ctx: any): void => {
   // DM
   if (ctx.message.chat.id >= 0) {
     commandsList +=
+      "/communities - get a list of your communities' websites\n" +
       "/leave - you have to choose which community you want " +
       "to leave and I'll do the rest\n";
   } // group chat
@@ -80,4 +82,33 @@ const onUserRemoved = (idFromPlatform: string, sender: string): void => {
     .catch(logger.error);
 };
 
-export { onChatStart, onHelp, onUserJoined, onUserLeft, onUserRemoved };
+const getCommunityUrls = async (
+  idFromPlatform: string
+): Promise<CommunityUrlResult[]> => {
+  const result = await axios.get(
+    `${API_BASE_URL}/community/url/${idFromPlatform}`
+  );
+  return result.data;
+};
+
+const onGetCommunityUrls = (ctx: any): void => {
+  getCommunityUrls(ctx.message.from.id).then((results) => {
+    const urls = results
+      .map((result) => `[${result.name}](${result.url})`)
+      .join("\n");
+
+    ctx.replyWithMarkdown(
+      `*Please visit your communities' websites:*\n${urls}`
+    );
+  });
+};
+
+export {
+  onChatStart,
+  onHelp,
+  onUserJoined,
+  onUserLeft,
+  onUserRemoved,
+  getCommunityUrls,
+  onGetCommunityUrls
+};
