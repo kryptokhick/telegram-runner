@@ -90,11 +90,24 @@ const getCommunityUrls = async (
   return result.data;
 };
 
+const onGetCommunityUrls = (ctx: any): void => {
+  getCommunityUrls(ctx.message.from.id).then((results) => {
+    const urls = results
+      .map((result) => `[${result.name}](${result.url})`)
+      .join("\n");
+
+    ctx.replyWithMarkdown(
+      `*Please visit your communities' websites:*\n${urls}`
+    );
+  });
+};
+
 export {
   onChatStart,
   onHelp,
   onUserJoined,
   onUserLeft,
   onUserRemoved,
-  getCommunityUrls
+  getCommunityUrls,
+  onGetCommunityUrls
 };
