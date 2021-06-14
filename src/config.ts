@@ -9,7 +9,6 @@ if (envFound.error)
 
 const telegramToken = process.env.BOT_TOKEN;
 const backendUrl = process.env.BACKEND_URL;
-const prefix = process.env.PREFIX || "!";
 const api = {
   prefix: "/api",
   port: process.env.PORT || 8990
@@ -24,6 +23,5 @@ if (!backendUrl)
 export default {
   telegramToken,
   backendUrl,
-  prefix,
   api
 };
