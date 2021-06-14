@@ -36,6 +36,7 @@ const onHelp = (ctx: any): void => {
   // DM
   if (ctx.message.chat.id >= 0) {
     commandsList +=
+      "/communities - get a list of your communities' websites\n" +
       "/leave - you have to choose which community you want " +
       "to leave and I'll do the rest\n";
   } // group chat
