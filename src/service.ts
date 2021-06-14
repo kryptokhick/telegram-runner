@@ -1,8 +1,9 @@
 /* eslint no-underscore-dangle: ["error", { "allowAfterThis": true }] */
 
 import axios from "axios";
-import logger from "./utils/logger";
+import { CommunityUrlResult } from "./api/types";
 import config from "./config";
+import logger from "./utils/logger";
 
 const API_BASE_URL = config.backendUrl;
 const PLATFORM = "telegram";
@@ -80,4 +81,20 @@ const onUserRemoved = (idFromPlatform: string, sender: string): void => {
     .catch(logger.error);
 };
 
-export { onChatStart, onHelp, onUserJoined, onUserLeft, onUserRemoved };
+const getCommunityUrls = async (
+  idFromPlatform: string
+): Promise<CommunityUrlResult[]> => {
+  const result = await axios.get(
+    `${API_BASE_URL}/community/url/${idFromPlatform}`
+  );
+  return result.data;
+};
+
+export {
+  onChatStart,
+  onHelp,
+  onUserJoined,
+  onUserLeft,
+  onUserRemoved,
+  getCommunityUrls
+};
