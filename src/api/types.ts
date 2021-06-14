@@ -8,6 +8,11 @@ type InviteResult = {
   code: string;
 };
 
+type CommunityUrlResult = {
+  name: string;
+  url: string;
+};
+
 type ErrorResult = {
   errors: { msg: string; value: string[] }[];
 };
@@ -21,4 +26,10 @@ class ActionError extends Error {
   }
 }
 
-export { ManageGroupsParam, InviteResult, ErrorResult, ActionError };
+export {
+  ManageGroupsParam,
+  InviteResult,
+  CommunityUrlResult,
+  ErrorResult,
+  ActionError
+};
