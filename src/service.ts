@@ -4,7 +4,7 @@ import axios from "axios";
 import logger from "./utils/logger";
 import config from "./config";
 
-const API_BASE_URL = config.hubUrl;
+const API_BASE_URL = config.backendUrl;
 const PLATFORM = "telegram";
 
 const onChatStart = (ctx: any): void => {

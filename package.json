@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "ts-node-dev src/Main.ts",
     "build": "tsc",
-    "prod": "node build/src/Main.js"
+    "prod": "node build/Main.js"
   },
   "dependencies": {
     "axios": "^0.21.1",
