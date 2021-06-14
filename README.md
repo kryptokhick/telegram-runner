@@ -20,12 +20,16 @@ Install dependencies (Telegraf):
 
 ```bash
 npm install
+# or
+yarn install
 ```
 
 Create a new file called .env and add the following environment variables:
 
 ```bash
 TELEGRAM_TOKEN="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+PREFIX="!"
+BACKEND_URL="https://agora.space/api/"
 ```
 
 Run the bot:
@@ -33,9 +37,13 @@ Run the bot:
 ```bash
 # for development:
 npm run dev
+# or
+yarn run dev
 
 # for production:
 npm run build && npm run prod
+# or
+yarn run build && yarn run prod
 ```
 
 ## Documentation
