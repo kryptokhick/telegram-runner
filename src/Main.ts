@@ -53,7 +53,7 @@ export default class Main {
     bot.help((ctx) => TGEvents.onHelp(ctx));
 
     // a user left the group
-    bot.on("left_chat_member", (ctx) => TGEvents.onUserLeft(ctx));
+    bot.on("left_chat_member", (ctx) => TGEvents.onUserLeftGroup(ctx));
 
     // start the bot
     bot.launch({ allowedUpdates: ["chat_member", "message"] });

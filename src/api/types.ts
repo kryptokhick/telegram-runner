@@ -9,6 +9,7 @@ type InviteResult = {
 };
 
 type CommunityUrlResult = {
+  id: string;
   name: string;
   url: string;
 };

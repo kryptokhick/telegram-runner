@@ -41,9 +41,7 @@ const onHelp = (ctx: any): void => {
       "to leave and I'll do the rest\n";
   } // group chat
   else {
-    commandsList +=
-      "/leave - you will be removed from this community\n" +
-      "/info - get relevant information about this community\n";
+    commandsList += "/leave - you will be removed from this community\n";
   }
 
   ctx.replyWithMarkdown(`${helpHeader}\n${commandsList}\n${helpFooter}`, {
@@ -67,9 +65,8 @@ const onUserJoined = (
     .catch(logger.error);
 };
 
-const onUserLeft = (ctx: any): void => {
+const onUserLeftGroup = (ctx: any): void =>
   ctx.reply(`Bye, ${ctx.message.left_chat_member.first_name} 😢`);
-};
 
 const onUserRemoved = (idFromPlatform: string, sender: string): void => {
   axios
@@ -84,11 +81,37 @@ const onUserRemoved = (idFromPlatform: string, sender: string): void => {
 
 const getCommunityUrls = async (
   idFromPlatform: string
-): Promise<CommunityUrlResult[]> => {
-  const result = await axios.get(
-    `${API_BASE_URL}/community/url/${idFromPlatform}`
-  );
-  return result.data;
+): Promise<CommunityUrlResult[]> =>
+  (await axios.get(`${API_BASE_URL}/community/url/${idFromPlatform}`)).data;
+
+const onUserLeftCommunity = async (
+  idFromPlatform: string,
+  sender: string,
+  justThisOne: boolean
+): Promise<void> => {
+  let communityIds: string[] = [];
+
+  if (justThisOne)
+    communityIds.push(
+      (await axios.get(`${API_BASE_URL}/community/id/${sender}`)).data
+    );
+  else
+    communityIds = (await getCommunityUrls(idFromPlatform)).map(
+      (res) => res.id
+    );
+
+  communityIds.map((communityId) => {
+    axios
+      .post(`${API_BASE_URL}/user/left`, {
+        idFromPlatform,
+        platform: PLATFORM,
+        communityId
+      })
+      .then((res) => logger.debug(JSON.stringify(res.data)))
+      .catch(logger.error);
+
+    return true;
+  });
 };
 
 const onGetCommunityUrls = (ctx: any): void => {
@@ -107,8 +130,9 @@ export {
   onChatStart,
   onHelp,
   onUserJoined,
-  onUserLeft,
+  onUserLeftGroup,
   onUserRemoved,
+  onUserLeftCommunity,
   getCommunityUrls,
   onGetCommunityUrls
 };
