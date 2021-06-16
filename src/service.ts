@@ -90,7 +90,7 @@ const getCommunityUrls = async (
 const leaveCommunity = async (
   idFromPlatform: string,
   justThisOne: boolean,
-  communityId: string | undefined
+  communityId?: string
 ): Promise<void> => {
   let communityIds: string[] = [];
 
@@ -102,7 +102,7 @@ const leaveCommunity = async (
     );
   }
 
-  communityIds.map((commId) => {
+  communityIds.forEach((commId) => {
     axios
       .post(`${API_BASE_URL}/user/left`, {
         idFromPlatform,
@@ -117,10 +117,7 @@ const leaveCommunity = async (
 };
 
 const onUserLeavesCommunity = async (ctx: any): Promise<void> => {
-  const {message} = ctx;
-  const chatId = message.chat.id;
-
-  if (chatId > 0) {
+  if (ctx.message.chat.id > 0) {
     const communityList: InlineKeyboardButton[][] = [
       [Markup.button.callback("Agora", "comm_1_agora")],
       [Markup.button.callback("Ethane", "comm_2_ethane")]
@@ -161,16 +158,16 @@ const onAction = async (ctx: any): Promise<void> => {
   if (data.startsWith("yes_")) {
     leaveCommunity(userId, true, data.split("yes_")[1]);
   } else if (data.startsWith("comm_")) {
-    const comm_id = data.split("_")[1];
-    const comm_name = data.split(`comm_${comm_id}_`)[1].toUpperCase();
+    const commId = data.split("_")[1];
+    const commName = data.split(`comm_${commId}_`)[1].toUpperCase();
 
     const firstName = (await Main.Client.getChatMember(userId, userId)).user
       .first_name;
 
     ctx.replyWithMarkdown(
-      `Hey ${firstName}!\nDo you really want to *LEAVE ${comm_name}*?`,
+      `Hey ${firstName}!\nDo you really want to *LEAVE ${commName}*?`,
       Markup.inlineKeyboard([
-        Markup.button.callback("Yes", `yes_${comm_id}`),
+        Markup.button.callback("Yes", `yes_${commId}`),
         Markup.button.callback("No", "no")
       ])
     );
