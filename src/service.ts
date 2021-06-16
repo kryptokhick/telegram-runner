@@ -1,9 +1,12 @@
 /* eslint no-underscore-dangle: ["error", { "allowAfterThis": true }] */
 
 import axios from "axios";
+import { Markup } from "telegraf";
+import { InlineKeyboardButton } from "typegram";
 import { CommunityUrlResult } from "./api/types";
 import config from "./config";
 import logger from "./utils/logger";
+import Main from "./Main";
 
 const API_BASE_URL = config.backendUrl;
 const PLATFORM = "telegram";
@@ -41,7 +44,7 @@ const onHelp = (ctx: any): void => {
       "to leave and I'll do the rest\n";
   } // group chat
   else {
-    commandsList += "/leave - you will be removed from this community\n";
+    commandsList += "";
   }
 
   ctx.replyWithMarkdown(`${helpHeader}\n${commandsList}\n${helpFooter}`, {
@@ -84,34 +87,50 @@ const getCommunityUrls = async (
 ): Promise<CommunityUrlResult[]> =>
   (await axios.get(`${API_BASE_URL}/community/url/${idFromPlatform}`)).data;
 
-const onUserLeftCommunity = async (
+const leaveCommunity = async (
   idFromPlatform: string,
-  sender: string,
-  justThisOne: boolean
+  justThisOne: boolean,
+  communityId: string | undefined
 ): Promise<void> => {
   let communityIds: string[] = [];
 
-  if (justThisOne)
-    communityIds.push(
-      (await axios.get(`${API_BASE_URL}/community/id/${sender}`)).data
-    );
-  else
+  if (justThisOne) {
+    if (communityId) communityIds.push(communityId);
+  } else {
     communityIds = (await getCommunityUrls(idFromPlatform)).map(
       (res) => res.id
     );
+  }
 
-  communityIds.map((communityId) => {
+  communityIds.map((commId) => {
     axios
       .post(`${API_BASE_URL}/user/left`, {
         idFromPlatform,
         platform: PLATFORM,
-        communityId
+        commId
       })
       .then((res) => logger.debug(JSON.stringify(res.data)))
       .catch(logger.error);
 
     return true;
   });
+};
+
+const onUserLeavesCommunity = async (ctx: any): Promise<void> => {
+  const {message} = ctx;
+  const chatId = message.chat.id;
+
+  if (chatId > 0) {
+    const communityList: InlineKeyboardButton[][] = [
+      [Markup.button.callback("Agora", "comm_1_agora")],
+      [Markup.button.callback("Ethane", "comm_2_ethane")]
+    ];
+
+    ctx.replyWithMarkdown(
+      "Choose the community you want to leave from the list below:",
+      Markup.inlineKeyboard(communityList)
+    );
+  }
 };
 
 const onGetCommunityUrls = (ctx: any): void => {
@@ -126,13 +145,47 @@ const onGetCommunityUrls = (ctx: any): void => {
   });
 };
 
+const onMessage = (ctx: any): void => {
+  // const message = ctx.message
+  // const chat = message.chat
+  // const chatId = chat.id
+  // const userId = message.from.id
+  onChatStart(ctx);
+};
+
+const onAction = async (ctx: any): Promise<void> => {
+  const query = ctx.update.callback_query;
+  const data = ctx.match[0];
+  const userId = query.from.id;
+
+  if (data.startsWith("yes_")) {
+    leaveCommunity(userId, true, data.split("yes_")[1]);
+  } else if (data.startsWith("comm_")) {
+    const comm_id = data.split("_")[1];
+    const comm_name = data.split(`comm_${comm_id}_`)[1].toUpperCase();
+
+    const firstName = (await Main.Client.getChatMember(userId, userId)).user
+      .first_name;
+
+    ctx.replyWithMarkdown(
+      `Hey ${firstName}!\nDo you really want to *LEAVE ${comm_name}*?`,
+      Markup.inlineKeyboard([
+        Markup.button.callback("Yes", `yes_${comm_id}`),
+        Markup.button.callback("No", "no")
+      ])
+    );
+  }
+};
+
 export {
   onChatStart,
   onHelp,
   onUserJoined,
   onUserLeftGroup,
   onUserRemoved,
-  onUserLeftCommunity,
+  onUserLeavesCommunity,
   getCommunityUrls,
-  onGetCommunityUrls
+  onGetCommunityUrls,
+  onMessage,
+  onAction
 };

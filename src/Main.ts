@@ -55,8 +55,17 @@ export default class Main {
     // a user left the group
     bot.on("left_chat_member", (ctx) => TGEvents.onUserLeftGroup(ctx));
 
+    // user wants to leave community
+    bot.command("leave", (ctx) => TGEvents.onUserLeavesCommunity(ctx));
+
+    // a user sends a message
+    bot.on("message", (ctx) => TGEvents.onMessage(ctx));
+
+    // user triggers a callback action via inline keyboad
+    bot.action(/.+/, (ctx) => TGEvents.onAction(ctx));
+
     // start the bot
-    bot.launch({ allowedUpdates: ["chat_member", "message"] });
+    bot.launch();
 
     // enable graceful stop
     process.once("SIGINT", () => bot.stop("SIGINT"));
