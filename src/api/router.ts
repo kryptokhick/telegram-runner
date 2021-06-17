@@ -7,19 +7,23 @@ const createRouter = () => {
 
   router.post(
     "/upgrade",
-    validators.bodyTelegramId("groupId"),
-    validators.bodyTelegramId("userId"),
-    validators.groupsValidator,
-    validators.messageValidator,
+    [
+      validators.bodyTelegramId("groupId"),
+      validators.bodyTelegramId("userId"),
+      validators.groupsValidator,
+      validators.messageValidator
+    ],
     controller.upgrade
   );
 
   router.post(
     "/downgrade",
-    validators.bodyTelegramId("groupId"),
-    validators.bodyTelegramId("userId"),
-    validators.groupsValidator,
-    validators.messageValidator,
+    [
+      validators.bodyTelegramId("groupId"),
+      validators.bodyTelegramId("userId"),
+      validators.groupsValidator,
+      validators.messageValidator
+    ],
     controller.downgrade
   );
 
