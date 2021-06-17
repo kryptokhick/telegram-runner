@@ -6,7 +6,10 @@ import logger from "../utils/logger";
 const fetchCommunitiesOfUser = async (
   idFromPlatform: string
 ): Promise<CommunityResult[]> =>
-  (await axios.get(`${config.backendUrl}/communities/${idFromPlatform}`)).data;
+  (
+    (await axios.get(`${config.backendUrl}/communities/${idFromPlatform}`))
+      .data as CommunityResult[]
+  ).filter((community) => community.telegramIsMember);
 
 const leaveCommunity = (idFromPlatform: string, communityId: string): void => {
   axios
