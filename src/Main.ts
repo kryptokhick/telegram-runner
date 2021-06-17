@@ -1,5 +1,3 @@
-/* eslint no-underscore-dangle: ["error", { "allowAfterThis": true }] */
-
 import { Telegraf, Telegram } from "telegraf";
 import * as TGEvents from "./service";
 import logger from "./utils/logger";
@@ -66,18 +64,23 @@ export default class Main {
     bot.on("left_chat_member", (ctx) => TGEvents.onUserLeftGroup(ctx));
 
     // user has chosen a community to leave
-    bot.action(/^leave_[0-9]+_[a-zA-Z0-9]+/, (ctx) =>
-      TGEvents.leaveCommunityAction(ctx)
+    bot.action(/^leave_confirm_[0-9]+_[a-zA-Z0-9 ,.:"'`]+$/, (ctx) =>
+      TGEvents.confirmLeaveCommunityAction(ctx)
     );
 
     // user confirmed leaving the community
-    bot.action(/^leave_[0-9]+/, (ctx) =>
-      TGEvents.confirmLeaveCommunityAction(ctx)
+    bot.action(/^leave_confirmed_[0-9]+$/, (ctx) =>
+      TGEvents.confirmedLeaveCommunityAction(ctx)
     );
 
     // start the bot
     bot.launch({
-      allowedUpdates: ["chat_member", "my_chat_member", "message"]
+      allowedUpdates: [
+        "chat_member",
+        "my_chat_member",
+        "message",
+        "callback_query"
+      ]
     });
 
     // enable graceful stop

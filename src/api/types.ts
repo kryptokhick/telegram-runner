@@ -1,17 +1,20 @@
+// prettier-ignore
 type ManageGroupsParam = {
-  userId: string;
+  userId  : string;
   groupIds: string[];
-  message: string;
+  message : string;
 };
 
 type InviteResult = {
   code: string;
 };
 
+// prettier-ignore
 type CommunityResult = {
-  id: number;
-  name: string;
-  url: string;
+  id              : string;
+  name            : string;
+  url             : string;
+  telegramIsMember: boolean;
 };
 
 type ErrorResult = {

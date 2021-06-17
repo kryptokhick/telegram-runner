@@ -67,8 +67,9 @@ const onUserJoined = (
     .catch(logger.error);
 };
 
-const onUserLeftGroup = (ctx: any): void =>
+const onUserLeftGroup = (ctx: any): void => {
   ctx.reply(`Bye, ${ctx.message.left_chat_member.first_name} 😢`);
+};
 
 const onUserRemoved = (idFromPlatform: string, sender: string): void => {
   axios
@@ -86,36 +87,29 @@ const fetchCommunitiesOfUser = async (
 ): Promise<CommunityResult[]> =>
   (await axios.get(`${API_BASE_URL}/communities/${idFromPlatform}`)).data;
 
-const leaveCommunities = (
-  idFromPlatform: string,
-  communityIds: number[]
-): void => {
-  communityIds.forEach((commId) => {
-    axios
-      .post(`${API_BASE_URL}/user/left`, {
-        idFromPlatform,
-        platform: PLATFORM,
-        commId
-      })
-      .then((res) => logger.debug(JSON.stringify(res.data)))
-      .catch(logger.error);
-
-    return true;
-  });
+const leaveCommunity = (idFromPlatform: string, communityId: string): void => {
+  axios
+    .post(`${API_BASE_URL}/user/left`, {
+      idFromPlatform,
+      platform: PLATFORM,
+      communityId
+    })
+    .then((res) => logger.debug(JSON.stringify(res.data)))
+    .catch(logger.error);
 };
 
 const onBlocked = async (ctx: any): Promise<void> => {
   const idFromPlatform = ctx.message.from.id;
-  leaveCommunities(
-    idFromPlatform,
-    (await fetchCommunitiesOfUser(idFromPlatform)).map((res) => res.id)
+
+  (await fetchCommunitiesOfUser(idFromPlatform)).forEach((community) =>
+    leaveCommunity(idFromPlatform, community.id)
   );
 };
 
-const leaveCommand = async (ctx: any): Promise<void> => {
+const leaveCommand = (ctx: any): void => {
   if (ctx.message.chat.id > 0) {
     const communityList: InlineKeyboardButton[][] = [
-      [Markup.button.callback("Agora", "leave_1_Agora")]
+      [Markup.button.callback("Agora", "leave_confirm_0_Agora")]
     ];
 
     ctx.replyWithMarkdown(
@@ -145,24 +139,25 @@ const onMessage = (ctx: any): void => {
   onChatStart(ctx);
 };
 
-const leaveCommunityAction = async (ctx: any): Promise<void> => {
+const confirmLeaveCommunityAction = (ctx: any): void => {
   const data = ctx.match[0];
-  const commId = data.split("_")[1];
-  const commName = data.split(`leave_${commId}_`)[1].toUpperCase();
+  const commId = data.split("_")[2];
+  const commName = data.split(`leave_confirm_${commId}_`)[1];
 
   ctx.replyWithMarkdown(
     `You'll be kicked from every *${commName}* group. Are you sure?`,
     Markup.inlineKeyboard([
-      Markup.button.callback("Yes", `confirmLeave_${commId}`),
+      Markup.button.callback("Yes", `leave_confirmed_${commId}`),
       Markup.button.callback("No", "no")
     ])
   );
 };
 
-const confirmLeaveCommunityAction = (ctx: any) => {
-  leaveCommunities(ctx.update.callback_query.from.id, [
-    ctx.match[0].split("confirmLeave_")[1]
-  ]);
+const confirmedLeaveCommunityAction = (ctx: any): void => {
+  leaveCommunity(
+    ctx.update.callback_query.from.id,
+    ctx.match[0].split("leave_confirmed_")[1]
+  );
 };
 
 export {
@@ -176,6 +171,6 @@ export {
   listCommunitiesCommand,
   onMessage,
   onBlocked,
-  leaveCommunityAction,
-  confirmLeaveCommunityAction
+  confirmLeaveCommunityAction,
+  confirmedLeaveCommunityAction
 };
