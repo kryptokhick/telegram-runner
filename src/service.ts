@@ -1,7 +1,9 @@
 /* eslint no-underscore-dangle: ["error", { "allowAfterThis": true }] */
 
 import axios from "axios";
-import { CommunityUrlResult } from "./api/types";
+import { Markup } from "telegraf";
+import { InlineKeyboardButton } from "typegram";
+import { CommunityResult } from "./api/types";
 import config from "./config";
 import logger from "./utils/logger";
 
@@ -19,7 +21,7 @@ const onChatStart = (ctx: any): void => {
     );
 };
 
-const onHelp = (ctx: any): void => {
+const helpCommand = (ctx: any): void => {
   const helpHeader =
     "Hello there! My name is Medousa.\n" +
     "I'm part of the [Agora](https://agora-space.vercel.app/) project and " +
@@ -41,9 +43,7 @@ const onHelp = (ctx: any): void => {
       "to leave and I'll do the rest\n";
   } // group chat
   else {
-    commandsList +=
-      "/leave - you will be removed from this community\n" +
-      "/info - get relevant information about this community\n";
+    commandsList += "";
   }
 
   ctx.replyWithMarkdown(`${helpHeader}\n${commandsList}\n${helpFooter}`, {
@@ -67,7 +67,7 @@ const onUserJoined = (
     .catch(logger.error);
 };
 
-const onUserLeft = (ctx: any): void => {
+const onUserLeftGroup = (ctx: any): void => {
   ctx.reply(`Bye, ${ctx.message.left_chat_member.first_name} 😢`);
 };
 
@@ -82,17 +82,45 @@ const onUserRemoved = (idFromPlatform: string, sender: string): void => {
     .catch(logger.error);
 };
 
-const getCommunityUrls = async (
+const fetchCommunitiesOfUser = async (
   idFromPlatform: string
-): Promise<CommunityUrlResult[]> => {
-  const result = await axios.get(
-    `${API_BASE_URL}/community/url/${idFromPlatform}`
-  );
-  return result.data;
+): Promise<CommunityResult[]> =>
+  (await axios.get(`${API_BASE_URL}/communities/${idFromPlatform}`)).data;
+
+const leaveCommunity = (idFromPlatform: string, communityId: string): void => {
+  axios
+    .post(`${API_BASE_URL}/user/left`, {
+      idFromPlatform,
+      platform: PLATFORM,
+      communityId
+    })
+    .then((res) => logger.debug(JSON.stringify(res.data)))
+    .catch(logger.error);
 };
 
-const onGetCommunityUrls = (ctx: any): void => {
-  getCommunityUrls(ctx.message.from.id).then((results) => {
+const onBlocked = async (ctx: any): Promise<void> => {
+  const idFromPlatform = ctx.message.from.id;
+
+  (await fetchCommunitiesOfUser(idFromPlatform)).forEach((community) =>
+    leaveCommunity(idFromPlatform, community.id)
+  );
+};
+
+const leaveCommand = (ctx: any): void => {
+  if (ctx.message.chat.id > 0) {
+    const communityList: InlineKeyboardButton[][] = [
+      [Markup.button.callback("Agora", "leave_confirm_0_Agora")]
+    ];
+
+    ctx.replyWithMarkdown(
+      "Choose the community you want to leave from the list below:",
+      Markup.inlineKeyboard(communityList)
+    );
+  }
+};
+
+const listCommunitiesCommand = (ctx: any): void => {
+  fetchCommunitiesOfUser(ctx.message.from.id).then((results) => {
     const urls = results
       .map((result) => `[${result.name}](${result.url})`)
       .join("\n");
@@ -103,12 +131,46 @@ const onGetCommunityUrls = (ctx: any): void => {
   });
 };
 
+const onMessage = (ctx: any): void => {
+  // const message = ctx.message
+  // const chat = message.chat
+  // const chatId = chat.id
+  // const userId = message.from.id
+  onChatStart(ctx);
+};
+
+const confirmLeaveCommunityAction = (ctx: any): void => {
+  const data = ctx.match[0];
+  const commId = data.split("_")[2];
+  const commName = data.split(`leave_confirm_${commId}_`)[1];
+
+  ctx.replyWithMarkdown(
+    `You'll be kicked from every *${commName}* group. Are you sure?`,
+    Markup.inlineKeyboard([
+      Markup.button.callback("Yes", `leave_confirmed_${commId}`),
+      Markup.button.callback("No", "no")
+    ])
+  );
+};
+
+const confirmedLeaveCommunityAction = (ctx: any): void => {
+  leaveCommunity(
+    ctx.update.callback_query.from.id,
+    ctx.match[0].split("leave_confirmed_")[1]
+  );
+};
+
 export {
   onChatStart,
-  onHelp,
+  helpCommand,
   onUserJoined,
-  onUserLeft,
+  onUserLeftGroup,
   onUserRemoved,
-  getCommunityUrls,
-  onGetCommunityUrls
+  leaveCommand,
+  fetchCommunitiesOfUser,
+  listCommunitiesCommand,
+  onMessage,
+  onBlocked,
+  confirmLeaveCommunityAction,
+  confirmedLeaveCommunityAction
 };

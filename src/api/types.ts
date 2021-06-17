@@ -1,16 +1,20 @@
+// prettier-ignore
 type ManageGroupsParam = {
-  userId: string;
+  userId  : string;
   groupIds: string[];
-  message: string;
+  message : string;
 };
 
 type InviteResult = {
   code: string;
 };
 
-type CommunityUrlResult = {
-  name: string;
-  url: string;
+// prettier-ignore
+type CommunityResult = {
+  id              : string;
+  name            : string;
+  url             : string;
+  telegramIsMember: boolean;
 };
 
 type ErrorResult = {
@@ -29,7 +33,7 @@ class ActionError extends Error {
 export {
   ManageGroupsParam,
   InviteResult,
-  CommunityUrlResult,
+  CommunityResult,
   ErrorResult,
   ActionError
 };
