@@ -1,9 +1,10 @@
 import { Telegraf, Telegram } from "telegraf";
+import api from "./api/api";
+import config from "./config";
 import * as service from "./service";
+import * as TGCommands from "./service/commands";
 import * as TGEvents from "./service/events";
 import logger from "./utils/logger";
-import config from "./config";
-import api from "./api/api";
 
 export default class Main {
   private static tg: Telegram;
@@ -53,10 +54,10 @@ export default class Main {
     bot.start((ctx) => TGEvents.onChatStart(ctx));
 
     // user uses the help command
-    bot.help((ctx) => service.helpCommand(ctx));
+    bot.help((ctx) => TGCommands.helpCommand(ctx));
 
     // user wants to leave community
-    bot.command("leave", (ctx) => service.leaveCommand(ctx));
+    bot.command("leave", (ctx) => TGCommands.leaveCommand(ctx));
 
     // a user sends a message
     bot.on("message", (ctx) => TGEvents.onMessage(ctx));
