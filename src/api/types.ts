@@ -8,8 +8,8 @@ type InviteResult = {
   code: string;
 };
 
-type CommunityUrlResult = {
-  id: string;
+type CommunityResult = {
+  id: number;
   name: string;
   url: string;
 };
@@ -30,7 +30,7 @@ class ActionError extends Error {
 export {
   ManageGroupsParam,
   InviteResult,
-  CommunityUrlResult,
+  CommunityResult,
   ErrorResult,
   ActionError
 };

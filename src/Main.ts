@@ -31,7 +31,10 @@ export default class Main {
 
         const update = ctx.update as any;
 
-        if (update.chat_member && update.chat_member.invite_link) {
+        // user deleted private chat with the bot
+        if (update?.my_chat_member?.new_chat_member?.status === "kicked") {
+          TGEvents.onBlocked(ctx);
+        } else if (update?.chat_member?.invite_link) {
           const member = update.chat_member;
           const invLink = member.invite_link.invite_link;
 
@@ -40,6 +43,7 @@ export default class Main {
 
           // TODO: check if the user fullfills the requirements
           await TGEvents.onUserRemoved(member.from.id, member.chat.id);
+
           // TODO: otherwise welcome the user
           logger.debug(invLink);
         }
@@ -50,22 +54,31 @@ export default class Main {
     bot.start((ctx) => TGEvents.onChatStart(ctx));
 
     // user uses the help command
-    bot.help((ctx) => TGEvents.onHelp(ctx));
-
-    // a user left the group
-    bot.on("left_chat_member", (ctx) => TGEvents.onUserLeftGroup(ctx));
+    bot.help((ctx) => TGEvents.helpCommand(ctx));
 
     // user wants to leave community
-    bot.command("leave", (ctx) => TGEvents.onUserLeavesCommunity(ctx));
+    bot.command("leave", (ctx) => TGEvents.leaveCommand(ctx));
 
     // a user sends a message
     bot.on("message", (ctx) => TGEvents.onMessage(ctx));
 
-    // user triggers a callback action via inline keyboad
-    bot.action(/.+/, (ctx) => TGEvents.onAction(ctx));
+    // a user left the group
+    bot.on("left_chat_member", (ctx) => TGEvents.onUserLeftGroup(ctx));
+
+    // user has chosen a community to leave
+    bot.action(/^leave_[0-9]+_[a-zA-Z0-9]+/, (ctx) =>
+      TGEvents.leaveCommunityAction(ctx)
+    );
+
+    // user confirmed leaving the community
+    bot.action(/^leave_[0-9]+/, (ctx) =>
+      TGEvents.confirmLeaveCommunityAction(ctx)
+    );
 
     // start the bot
-    bot.launch();
+    bot.launch({
+      allowedUpdates: ["chat_member", "my_chat_member", "message"]
+    });
 
     // enable graceful stop
     process.once("SIGINT", () => bot.stop("SIGINT"));

@@ -3,10 +3,9 @@
 import axios from "axios";
 import { Markup } from "telegraf";
 import { InlineKeyboardButton } from "typegram";
-import { CommunityUrlResult } from "./api/types";
+import { CommunityResult } from "./api/types";
 import config from "./config";
 import logger from "./utils/logger";
-import Main from "./Main";
 
 const API_BASE_URL = config.backendUrl;
 const PLATFORM = "telegram";
@@ -22,7 +21,7 @@ const onChatStart = (ctx: any): void => {
     );
 };
 
-const onHelp = (ctx: any): void => {
+const helpCommand = (ctx: any): void => {
   const helpHeader =
     "Hello there! My name is Medousa.\n" +
     "I'm part of the [Agora](https://agora-space.vercel.app/) project and " +
@@ -82,26 +81,15 @@ const onUserRemoved = (idFromPlatform: string, sender: string): void => {
     .catch(logger.error);
 };
 
-const getCommunityUrls = async (
+const fetchCommunitiesOfUser = async (
   idFromPlatform: string
-): Promise<CommunityUrlResult[]> =>
-  (await axios.get(`${API_BASE_URL}/community/url/${idFromPlatform}`)).data;
+): Promise<CommunityResult[]> =>
+  (await axios.get(`${API_BASE_URL}/communities/${idFromPlatform}`)).data;
 
-const leaveCommunity = async (
+const leaveCommunities = (
   idFromPlatform: string,
-  justThisOne: boolean,
-  communityId?: string
-): Promise<void> => {
-  let communityIds: string[] = [];
-
-  if (justThisOne) {
-    if (communityId) communityIds.push(communityId);
-  } else {
-    communityIds = (await getCommunityUrls(idFromPlatform)).map(
-      (res) => res.id
-    );
-  }
-
+  communityIds: number[]
+): void => {
   communityIds.forEach((commId) => {
     axios
       .post(`${API_BASE_URL}/user/left`, {
@@ -116,11 +104,18 @@ const leaveCommunity = async (
   });
 };
 
-const onUserLeavesCommunity = async (ctx: any): Promise<void> => {
+const onBlocked = async (ctx: any): Promise<void> => {
+  const idFromPlatform = ctx.message.from.id;
+  leaveCommunities(
+    idFromPlatform,
+    (await fetchCommunitiesOfUser(idFromPlatform)).map((res) => res.id)
+  );
+};
+
+const leaveCommand = async (ctx: any): Promise<void> => {
   if (ctx.message.chat.id > 0) {
     const communityList: InlineKeyboardButton[][] = [
-      [Markup.button.callback("Agora", "comm_1_agora")],
-      [Markup.button.callback("Ethane", "comm_2_ethane")]
+      [Markup.button.callback("Agora", "leave_1_Agora")]
     ];
 
     ctx.replyWithMarkdown(
@@ -130,8 +125,8 @@ const onUserLeavesCommunity = async (ctx: any): Promise<void> => {
   }
 };
 
-const onGetCommunityUrls = (ctx: any): void => {
-  getCommunityUrls(ctx.message.from.id).then((results) => {
+const listCommunitiesCommand = (ctx: any): void => {
+  fetchCommunitiesOfUser(ctx.message.from.id).then((results) => {
     const urls = results
       .map((result) => `[${result.name}](${result.url})`)
       .join("\n");
@@ -150,39 +145,37 @@ const onMessage = (ctx: any): void => {
   onChatStart(ctx);
 };
 
-const onAction = async (ctx: any): Promise<void> => {
-  const query = ctx.update.callback_query;
+const leaveCommunityAction = async (ctx: any): Promise<void> => {
   const data = ctx.match[0];
-  const userId = query.from.id;
+  const commId = data.split("_")[1];
+  const commName = data.split(`leave_${commId}_`)[1].toUpperCase();
 
-  if (data.startsWith("yes_")) {
-    leaveCommunity(userId, true, data.split("yes_")[1]);
-  } else if (data.startsWith("comm_")) {
-    const commId = data.split("_")[1];
-    const commName = data.split(`comm_${commId}_`)[1].toUpperCase();
+  ctx.replyWithMarkdown(
+    `You'll be kicked from every *${commName}* group. Are you sure?`,
+    Markup.inlineKeyboard([
+      Markup.button.callback("Yes", `confirmLeave_${commId}`),
+      Markup.button.callback("No", "no")
+    ])
+  );
+};
 
-    const firstName = (await Main.Client.getChatMember(userId, userId)).user
-      .first_name;
-
-    ctx.replyWithMarkdown(
-      `Hey ${firstName}!\nDo you really want to *LEAVE ${commName}*?`,
-      Markup.inlineKeyboard([
-        Markup.button.callback("Yes", `yes_${commId}`),
-        Markup.button.callback("No", "no")
-      ])
-    );
-  }
+const confirmLeaveCommunityAction = (ctx: any) => {
+  leaveCommunities(ctx.update.callback_query.from.id, [
+    ctx.match[0].split("confirmLeave_")[1]
+  ]);
 };
 
 export {
   onChatStart,
-  onHelp,
+  helpCommand,
   onUserJoined,
   onUserLeftGroup,
   onUserRemoved,
-  onUserLeavesCommunity,
-  getCommunityUrls,
-  onGetCommunityUrls,
+  leaveCommand,
+  fetchCommunitiesOfUser,
+  listCommunitiesCommand,
   onMessage,
-  onAction
+  onBlocked,
+  leaveCommunityAction,
+  confirmLeaveCommunityAction
 };
