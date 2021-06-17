@@ -1,5 +1,3 @@
-/* eslint no-underscore-dangle: ["error", { "allowAfterThis": true }] */
-
 import axios from "axios";
 import { Markup } from "telegraf";
 import { InlineKeyboardButton } from "typegram";
@@ -132,10 +130,6 @@ const listCommunitiesCommand = (ctx: any): void => {
 };
 
 const onMessage = (ctx: any): void => {
-  // const message = ctx.message
-  // const chat = message.chat
-  // const chatId = chat.id
-  // const userId = message.from.id
   onChatStart(ctx);
 };
 

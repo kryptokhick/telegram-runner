@@ -1,13 +1,13 @@
 import Main from "../Main";
-import { ManageGroupsParam, InviteResult } from "./types";
+import { ManageGroupsParam } from "./types";
 import { UnixTime } from "../utils/utils";
 
-const generateInvite = (groupId: string): Promise<InviteResult> =>
+const generateInvite = (groupId: string): Promise<string> =>
   new Promise((resolve) =>
     Main.Client.createChatInviteLink(groupId, {
       expire_date: UnixTime(new Date()) + 600,
       member_limit: 1
-    }).then((invite) => resolve({ code: invite.invite_link }))
+    }).then((invite) => resolve(invite.invite_link))
   );
 
 const manageGroups = (
@@ -17,7 +17,7 @@ const manageGroups = (
   const invites: string[] = [];
 
   params.groupIds.forEach(async (groupId) => {
-    if (isUpgrade) invites.push((await generateInvite(groupId)).code);
+    if (isUpgrade) invites.push(await generateInvite(groupId));
     else {
       // TODO: create an own kick method with custom parameters
       Main.Client.kickChatMember(groupId, Number(params.userId));

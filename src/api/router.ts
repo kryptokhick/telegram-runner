@@ -23,12 +23,6 @@ const createRouter = () => {
     controller.downgrade
   );
 
-  router.get(
-    "/invite/:groupId",
-    validators.bodyTelegramId("groupId"),
-    controller.getInvite
-  );
-
   return router;
 };
 

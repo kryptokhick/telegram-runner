@@ -5,10 +5,6 @@ type ManageGroupsParam = {
   message : string;
 };
 
-type InviteResult = {
-  code: string;
-};
-
 // prettier-ignore
 type CommunityResult = {
   id              : string;
@@ -30,10 +26,4 @@ class ActionError extends Error {
   }
 }
 
-export {
-  ManageGroupsParam,
-  InviteResult,
-  CommunityResult,
-  ErrorResult,
-  ActionError
-};
+export { ManageGroupsParam, CommunityResult, ErrorResult, ActionError };
