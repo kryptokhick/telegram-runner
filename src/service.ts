@@ -5,20 +5,6 @@ import { CommunityResult } from "./api/types";
 import config from "./config";
 import logger from "./utils/logger";
 
-const API_BASE_URL = config.backendUrl;
-const PLATFORM = "telegram";
-
-const onChatStart = (ctx: any): void => {
-  if (ctx.message.chat.id > 0)
-    // TODO: check whether the user is in the database
-    ctx.replyWithMarkdown(
-      [
-        "I'm sorry, I couldn't find you in the database.",
-        "Make sure to register [here](https://agora.space/)."
-      ].join("\n")
-    );
-};
-
 const helpCommand = (ctx: any): void => {
   const helpHeader =
     "Hello there! My name is Medousa.\n" +
@@ -49,59 +35,20 @@ const helpCommand = (ctx: any): void => {
   });
 };
 
-const onUserJoined = (
-  refId: string,
-  idFromPlatform: string,
-  sender: string
-): void => {
-  axios
-    .post(`${API_BASE_URL}/user/joined`, {
-      refId,
-      idFromPlatform,
-      platform: PLATFORM,
-      sender
-    })
-    .then((res) => logger.debug(JSON.stringify(res.data)))
-    .catch(logger.error);
-};
-
-const onUserLeftGroup = (ctx: any): void => {
-  ctx.reply(`Bye, ${ctx.message.left_chat_member.first_name} 😢`);
-};
-
-const onUserRemoved = (idFromPlatform: string, sender: string): void => {
-  axios
-    .post(`${API_BASE_URL}/user/removed`, {
-      idFromPlatform,
-      platform: PLATFORM,
-      sender
-    })
-    .then((res) => logger.debug(JSON.stringify(res.data)))
-    .catch(logger.error);
-};
-
 const fetchCommunitiesOfUser = async (
   idFromPlatform: string
 ): Promise<CommunityResult[]> =>
-  (await axios.get(`${API_BASE_URL}/communities/${idFromPlatform}`)).data;
+  (await axios.get(`${config.backendUrl}/communities/${idFromPlatform}`)).data;
 
 const leaveCommunity = (idFromPlatform: string, communityId: string): void => {
   axios
-    .post(`${API_BASE_URL}/user/left`, {
+    .post(`${config.backendUrl}/user/left`, {
       idFromPlatform,
-      platform: PLATFORM,
+      platform: config.platform,
       communityId
     })
     .then((res) => logger.debug(JSON.stringify(res.data)))
     .catch(logger.error);
-};
-
-const onBlocked = async (ctx: any): Promise<void> => {
-  const idFromPlatform = ctx.message.from.id;
-
-  (await fetchCommunitiesOfUser(idFromPlatform)).forEach((community) =>
-    leaveCommunity(idFromPlatform, community.id)
-  );
 };
 
 const leaveCommand = (ctx: any): void => {
@@ -129,10 +76,6 @@ const listCommunitiesCommand = (ctx: any): void => {
   });
 };
 
-const onMessage = (ctx: any): void => {
-  onChatStart(ctx);
-};
-
 const confirmLeaveCommunityAction = (ctx: any): void => {
   const data = ctx.match[0];
   const commId = data.split("_")[2];
@@ -155,16 +98,11 @@ const confirmedLeaveCommunityAction = (ctx: any): void => {
 };
 
 export {
-  onChatStart,
   helpCommand,
-  onUserJoined,
-  onUserLeftGroup,
-  onUserRemoved,
   leaveCommand,
+  leaveCommunity,
   fetchCommunitiesOfUser,
   listCommunitiesCommand,
-  onMessage,
-  onBlocked,
   confirmLeaveCommunityAction,
   confirmedLeaveCommunityAction
 };
