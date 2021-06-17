@@ -1,6 +1,6 @@
 import axios from "axios";
+import { fetchCommunitiesOfUser, leaveCommunity } from "./common";
 import config from "../config";
-import { fetchCommunitiesOfUser, leaveCommunity } from "../service";
 import logger from "../utils/logger";
 
 const onChatStart = (ctx: any): void => {

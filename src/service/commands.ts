@@ -1,6 +1,6 @@
 import { Markup } from "telegraf";
 import { InlineKeyboardButton } from "typegram";
-import { fetchCommunitiesOfUser } from "../service";
+import { fetchCommunitiesOfUser } from "./common";
 
 const helpCommand = (ctx: any): void => {
   const helpHeader =

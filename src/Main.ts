@@ -1,7 +1,7 @@
 import { Telegraf, Telegram } from "telegraf";
 import api from "./api/api";
 import config from "./config";
-import * as service from "./service";
+import * as TGActions from "./service/actions";
 import * as TGCommands from "./service/commands";
 import * as TGEvents from "./service/events";
 import logger from "./utils/logger";
@@ -67,12 +67,12 @@ export default class Main {
 
     // user has chosen a community to leave
     bot.action(/^leave_confirm_[0-9]+_[a-zA-Z0-9 ,.:"'`]+$/, (ctx) =>
-      service.confirmLeaveCommunityAction(ctx)
+      TGActions.confirmLeaveCommunityAction(ctx)
     );
 
     // user confirmed leaving the community
     bot.action(/^leave_confirmed_[0-9]+$/, (ctx) =>
-      service.confirmedLeaveCommunityAction(ctx)
+      TGActions.confirmedLeaveCommunityAction(ctx)
     );
 
     // start the bot
