@@ -18,31 +18,12 @@ export default class Bot {
     // telegram client instance
     this.tg = bot.telegram;
 
-    bot.use(async (ctx, next) => {
+    // register middleware to log the duration of updates
+    bot.use(async (_, next) => {
       const start = Date.now();
-      return next().then(async () => {
-        const ms = Date.now() - start;
-        logger.verbose(`response time ${ms}ms`);
-
-        const update = ctx.update as any;
-
-        // user deleted private chat with the bot
-        if (update?.my_chat_member?.new_chat_member?.status === "kicked") {
-          TGEvents.onBlocked(ctx);
-        } else if (update?.chat_member?.invite_link) {
-          const member = update.chat_member;
-          const invLink = member.invite_link.invite_link;
-
-          // TODO: tell the HUB that a new user joined the group
-          await TGEvents.onUserJoined(invLink, member.from.id, member.chat.id);
-
-          // TODO: check if the user fullfills the requirements
-          await TGEvents.onUserRemoved(member.from.id, member.chat.id);
-
-          // TODO: otherwise welcome the user
-          logger.debug(invLink);
-        }
-      });
+      return next().then(async () =>
+        logger.verbose(`response time ${Date.now() - start}ms`)
+      );
     });
 
     // listening on new chat with a Telegram user
@@ -59,6 +40,12 @@ export default class Bot {
 
     // a user left the group
     bot.on("left_chat_member", (ctx) => TGEvents.onUserLeftGroup(ctx));
+
+    // a chat_member update happened (like a user joining with an invite link)
+    bot.on("chat_member", (ctx) => TGEvents.onChatMemberUpdate(ctx));
+
+    // a my_chat_member update happened (like a user blocked the bot)
+    bot.on("my_chat_member", (ctx) => TGEvents.onMyChatMemberUpdate(ctx));
 
     // user has chosen a community to leave
     bot.action(/^leave_confirm_[0-9]+_[a-zA-Z0-9 ,.:"'`]+$/, (ctx) =>

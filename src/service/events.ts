@@ -51,12 +51,35 @@ const onBlocked = async (ctx: any): Promise<void> => {
   );
 };
 
+const onChatMemberUpdate = async (ctx: any): Promise<void> => {
+  const member = ctx.update.chat_member;
+
+  if (member.invite_link) {
+    const invLink = member.invite_link.invite_link;
+
+    logger.debug(invLink);
+
+    await onUserJoined(invLink, member.from.id, member.chat.id);
+
+    // TODO: check if the user fullfills the requirements
+    await onUserRemoved(member.from.id, member.chat.id);
+  }
+};
+
+const onMyChatMemberUpdate = async (ctx: any): Promise<void> => {
+  if (ctx.update.my_chat_member.new_chat_member?.status === "kicked") {
+    onBlocked(ctx);
+  }
+};
+
 const onMessage = (ctx: any): void => {
   onChatStart(ctx);
 };
 
 export {
   onChatStart,
+  onChatMemberUpdate,
+  onMyChatMemberUpdate,
   onUserJoined,
   onUserLeftGroup,
   onUserRemoved,
