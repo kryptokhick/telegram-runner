@@ -43,15 +43,17 @@ const onUserRemoved = (idFromPlatform: string, sender: string): void => {
     .catch(logger.error);
 };
 
-const onBlocked = async (ctx: any): Promise<void> => {
+const onBlocked = (ctx: any): void => {
   const idFromPlatform = ctx.message.from.id;
 
-  (await fetchCommunitiesOfUser(idFromPlatform)).forEach((community) =>
-    leaveCommunity(idFromPlatform, community.id)
+  fetchCommunitiesOfUser(idFromPlatform).then((communities) =>
+    communities.forEach((community) =>
+      leaveCommunity(idFromPlatform, community.id)
+    )
   );
 };
 
-const onChatMemberUpdate = async (ctx: any): Promise<void> => {
+const onChatMemberUpdate = (ctx: any): void => {
   const member = ctx.update.chat_member;
 
   if (member.invite_link) {
@@ -59,14 +61,14 @@ const onChatMemberUpdate = async (ctx: any): Promise<void> => {
 
     logger.debug(invLink);
 
-    await onUserJoined(invLink, member.from.id, member.chat.id);
+    onUserJoined(invLink, member.from.id, member.chat.id);
 
     // TODO: check if the user fullfills the requirements
-    await onUserRemoved(member.from.id, member.chat.id);
+    onUserRemoved(member.from.id, member.chat.id);
   }
 };
 
-const onMyChatMemberUpdate = async (ctx: any): Promise<void> => {
+const onMyChatMemberUpdate = (ctx: any): void => {
   if (ctx.update.my_chat_member.new_chat_member?.status === "kicked") {
     onBlocked(ctx);
   }

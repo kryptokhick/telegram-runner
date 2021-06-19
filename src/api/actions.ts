@@ -2,13 +2,13 @@ import Bot from "../Bot";
 import { ManageGroupsParam } from "./types";
 import { UnixTime } from "../utils/utils";
 
-const generateInvite = (groupId: string): Promise<string> =>
-  new Promise((resolve) =>
-    Bot.Client.createChatInviteLink(groupId, {
+const generateInvite = async (groupId: string): Promise<string> =>
+  (
+    await Bot.Client.createChatInviteLink(groupId, {
       expire_date: UnixTime(new Date()) + 600,
       member_limit: 1
-    }).then((invite) => resolve(invite.invite_link))
-  );
+    })
+  ).invite_link;
 
 const manageGroups = (
   params: ManageGroupsParam,
