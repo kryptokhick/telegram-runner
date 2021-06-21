@@ -9,7 +9,7 @@ const createRouter = () => {
     "/upgrade",
     [
       validators.bodyTelegramId("groupId"),
-      validators.bodyTelegramId("userId"),
+      validators.bodyTelegramId("platformUserId"),
       validators.groupsValidator,
       validators.messageValidator
     ],
@@ -20,7 +20,7 @@ const createRouter = () => {
     "/downgrade",
     [
       validators.bodyTelegramId("groupId"),
-      validators.bodyTelegramId("userId"),
+      validators.bodyTelegramId("platformUserId"),
       validators.groupsValidator,
       validators.messageValidator
     ],

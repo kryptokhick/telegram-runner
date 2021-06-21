@@ -14,14 +14,14 @@ const onChatStart = (ctx: any): void => {
 
 const onUserJoined = (
   refId: string,
-  idFromPlatform: string,
+  platformUserId: string,
   sender: string
 ): void => {
   axios
     .post(`${config.backendUrl}/user/joinedPlatform`, {
       refId,
-      idFromPlatform,
       platform: config.platform,
+      platformUserId,
       sender
     })
     .then((res) => logger.debug(JSON.stringify(res.data)))
@@ -32,11 +32,11 @@ const onUserLeftGroup = (ctx: any): void => {
   ctx.reply(`Bye, ${ctx.message.left_chat_member.first_name} 😢`);
 };
 
-const onUserRemoved = (idFromPlatform: string, sender: string): void => {
+const onUserRemoved = (platformUserId: string, sender: string): void => {
   axios
     .post(`${config.backendUrl}/user/removeFromPlatform`, {
-      idFromPlatform,
       platform: config.platform,
+      platformUserId,
       sender
     })
     .then((res) => logger.debug(JSON.stringify(res.data)))
@@ -44,11 +44,11 @@ const onUserRemoved = (idFromPlatform: string, sender: string): void => {
 };
 
 const onBlocked = (ctx: any): void => {
-  const idFromPlatform = ctx.message.from.id;
+  const platformUserId = ctx.message.from.id;
 
-  fetchCommunitiesOfUser(idFromPlatform).then((communities) =>
+  fetchCommunitiesOfUser(platformUserId).then((communities) =>
     communities.forEach((community) =>
-      leaveCommunity(idFromPlatform, community.id)
+      leaveCommunity(platformUserId, community.id)
     )
   );
 };

@@ -1,8 +1,8 @@
 // prettier-ignore
 type ManageGroupsParam = {
-  userId  : string;
-  groupIds: string[];
-  message : string;
+  platformUserId: string;
+  groupIds      : string[];
+  message       : string;
 };
 
 // prettier-ignore

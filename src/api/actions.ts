@@ -20,7 +20,7 @@ const manageGroups = (
     if (isUpgrade) invites.push(await generateInvite(groupId));
     else {
       // TODO: create an own kick method with custom parameters
-      Bot.Client.kickChatMember(groupId, Number(params.userId));
+      Bot.Client.kickChatMember(groupId, Number(params.platformUserId));
     }
   });
 
@@ -29,7 +29,7 @@ const manageGroups = (
       "Oh hello! I'm more than happy to tell you that you can join these " +
       `groups below:\n${invites.join("\n")}`;
 
-    Bot.Client.sendMessage(params.userId, message);
+    Bot.Client.sendMessage(params.platformUserId, message);
   }
   // TODO: use the message that we get in the parameter
 
