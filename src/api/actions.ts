@@ -5,7 +5,7 @@ import { UnixTime } from "../utils/utils";
 const generateInvite = async (groupId: string): Promise<string> =>
   (
     await Bot.Client.createChatInviteLink(groupId, {
-      expire_date: UnixTime(new Date()) + 600,
+      expire_date: UnixTime(new Date()) + 900,
       member_limit: 1
     })
   ).invite_link;

@@ -18,7 +18,7 @@ const onUserJoined = (
   sender: string
 ): void => {
   axios
-    .post(`${config.backendUrl}/user/joined`, {
+    .post(`${config.backendUrl}/user/joinedPlatform`, {
       refId,
       idFromPlatform,
       platform: config.platform,
@@ -34,7 +34,7 @@ const onUserLeftGroup = (ctx: any): void => {
 
 const onUserRemoved = (idFromPlatform: string, sender: string): void => {
   axios
-    .post(`${config.backendUrl}/user/removed`, {
+    .post(`${config.backendUrl}/user/removeFromPlatform`, {
       idFromPlatform,
       platform: config.platform,
       sender
