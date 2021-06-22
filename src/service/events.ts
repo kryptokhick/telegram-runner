@@ -15,14 +15,14 @@ const onChatStart = (ctx: any): void => {
 const onUserJoined = (
   refId: string,
   platformUserId: string,
-  sender: string
+  groupId: string
 ): void => {
   axios
     .post(`${config.backendUrl}/user/joinedPlatform`, {
       refId,
       platform: config.platform,
       platformUserId,
-      sender
+      groupId
     })
     .then((res) => logger.debug(JSON.stringify(res.data)))
     .catch(logger.error);
@@ -32,12 +32,12 @@ const onUserLeftGroup = (ctx: any): void => {
   ctx.reply(`Bye, ${ctx.message.left_chat_member.first_name} 😢`);
 };
 
-const onUserRemoved = (platformUserId: string, sender: string): void => {
+const onUserRemoved = (platformUserId: string, groupId: string): void => {
   axios
     .post(`${config.backendUrl}/user/removeFromPlatform`, {
       platform: config.platform,
       platformUserId,
-      sender
+      groupId
     })
     .then((res) => logger.debug(JSON.stringify(res.data)))
     .catch(logger.error);
