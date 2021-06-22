@@ -1,14 +1,14 @@
-import Main from "../Main";
-import { ManageGroupsParam, InviteResult } from "./types";
+import Bot from "../Bot";
+import { ManageGroupsParam } from "./types";
 import { UnixTime } from "../utils/utils";
 
-const generateInvite = (groupId: string): Promise<InviteResult> =>
-  new Promise((resolve) =>
-    Main.Client.createChatInviteLink(groupId, {
-      expire_date: UnixTime(new Date()) + 600,
+const generateInvite = async (groupId: string): Promise<string> =>
+  (
+    await Bot.Client.createChatInviteLink(groupId, {
+      expire_date: UnixTime(new Date()) + 900,
       member_limit: 1
-    }).then((invite) => resolve({ code: invite.invite_link }))
-  );
+    })
+  ).invite_link;
 
 const manageGroups = (
   params: ManageGroupsParam,
@@ -17,10 +17,10 @@ const manageGroups = (
   const invites: string[] = [];
 
   params.groupIds.forEach(async (groupId) => {
-    if (isUpgrade) invites.push((await generateInvite(groupId)).code);
+    if (isUpgrade) invites.push(await generateInvite(groupId));
     else {
       // TODO: create an own kick method with custom parameters
-      Main.Client.kickChatMember(groupId, Number(params.userId));
+      Bot.Client.kickChatMember(groupId, Number(params.platformUserId));
     }
   });
 
@@ -29,7 +29,7 @@ const manageGroups = (
       "Oh hello! I'm more than happy to tell you that you can join these " +
       `groups below:\n${invites.join("\n")}`;
 
-    Main.Client.sendMessage(params.userId, message);
+    Bot.Client.sendMessage(params.platformUserId, message);
   }
   // TODO: use the message that we get in the parameter
 

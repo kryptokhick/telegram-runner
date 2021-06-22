@@ -1,12 +1,8 @@
 // prettier-ignore
 type ManageGroupsParam = {
-  userId  : string;
-  groupIds: string[];
-  message : string;
-};
-
-type InviteResult = {
-  code: string;
+  platformUserId: string;
+  groupIds      : string[];
+  message       : string;
 };
 
 // prettier-ignore
@@ -30,10 +26,4 @@ class ActionError extends Error {
   }
 }
 
-export {
-  ManageGroupsParam,
-  InviteResult,
-  CommunityResult,
-  ErrorResult,
-  ActionError
-};
+export { ManageGroupsParam, CommunityResult, ErrorResult, ActionError };
