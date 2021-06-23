@@ -36,9 +36,9 @@ const onChatStart = (ctx: any): void => {
 
           generateInvite(groupId).then((inviteLink) =>
             ctx.reply(
-              `${"Here’s your link." +
-                "It’s only active for 15 minutes and is only usable once:"}${ 
-                inviteLink}`
+              "Here’s your link." +
+                "It’s only active for 15 minutes and is only usable once:" +
+                `${inviteLink}`
             )
           );
         })
