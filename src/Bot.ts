@@ -30,6 +30,7 @@ export default class Bot {
 
     // other commands
     bot.command("leave", (ctx) => TGCommands.leaveCommand(ctx));
+    bot.command("list", (ctx) => TGCommands.listCommunitiesCommand(ctx));
 
     // event listeners
     bot.on("message", (ctx) => TGEvents.onMessage(ctx));
