@@ -1,15 +1,38 @@
 import axios from "axios";
+import { generateInvite } from "../api/actions";
 import { fetchCommunitiesOfUser, leaveCommunity } from "./common";
 import config from "../config";
 import logger from "../utils/logger";
 
 const onChatStart = (ctx: any): void => {
-  if (ctx.message.chat.id > 0)
-    // TODO: check whether the user is in the database
-    ctx.replyWithMarkdown(
-      "I'm sorry, I couldn't find you in the database.\n" +
-        "Make sure to register [here](https://agora.space/)."
-    );
+  const {message} = ctx;
+
+  if (message.chat.id > 0) {
+    if (new RegExp(/^\/start [0-9]+_[0-9]+$/).test(message.text)) {
+      const agoraUserId = message.text.split("/start ")[1].split("_")[0];
+      const platformUserId = message.from.id;
+      const groupId = message.text.split("_")[1];
+
+      axios
+        .post(`${config.backendUrl}/user/register`, {
+          agoraUserId,
+          platform: config.platform,
+          platformUserId
+        })
+        .then((res) => {
+          logger.debug(JSON.stringify(res.data));
+
+          generateInvite(groupId).then((inviteLink) =>
+            ctx.reply(
+              "Here’s your link." +
+                "It’s only active for 10 minutes and is only usable once:" +
+                `${inviteLink}`
+            )
+          );
+        })
+        .catch(logger.error);
+    } // else onMessage(ctx);
+  }
 };
 
 const onUserJoined = (
