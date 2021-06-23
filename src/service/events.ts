@@ -20,24 +20,25 @@ const onChatStart = (ctx: any): void => {
 
   if (message.chat.id > 0) {
     if (new RegExp(/^\/start [0-9]+_[0-9]+$/).test(message.text)) {
-      const agoraUserId = message.text.split("/start ")[1].split("_")[0];
+      const refId = message.text.split("/start ")[1].split("_")[0];
       const platformUserId = message.from.id;
       const groupId = message.text.split("_")[1];
 
       axios
-        .post(`${config.backendUrl}/user/register`, {
-          agoraUserId,
+        .post(`${config.backendUrl}/user/joinedPlatform`, {
+          refId,
           platform: config.platform,
-          platformUserId
+          platformUserId,
+          groupId
         })
         .then((res) => {
           logger.debug(JSON.stringify(res.data));
 
           generateInvite(groupId).then((inviteLink) =>
             ctx.reply(
-              "Here’s your link." +
-                "It’s only active for 15 minutes and is only usable once:" +
-                `${inviteLink}`
+              `${"Here’s your link." +
+                "It’s only active for 15 minutes and is only usable once:"}${ 
+                inviteLink}`
             )
           );
         })
