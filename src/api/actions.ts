@@ -30,10 +30,11 @@ const manageGroups = (
     }
   });
 
-  if (isUpgrade) {
+  if (isUpgrade && invites.length) {
     const message: string =
-      "Oh hello! I'm more than happy to tell you that you can join these " +
-      `groups below:\n${invites.join("\n")}`;
+      `${"You have 15 minutes to join these groups before the invite links " +
+      "expire:\n"}${ 
+      invites.join("\n")}`;
 
     Bot.Client.sendMessage(params.platformUserId, message);
   }
