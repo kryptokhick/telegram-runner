@@ -20,7 +20,6 @@ const manageGroups = (
 
   params.groupIds.forEach(async (groupId) => {
     if (isUpgrade) {
-      invites.push("await generateInvite(groupId)");
       Bot.Client.getChatMember(groupId, Number(platformUserId))
         .then(() =>
           logger.error(
@@ -28,7 +27,7 @@ const manageGroups = (
               `of the group ${groupId}`
           )
         )
-        .catch(() => invites.push("await generateInvite(groupId)"));
+        .catch(async () => invites.push(await generateInvite(groupId)));
     } else {
       // TODO: create an own kick method with custom parameters
       Bot.Client.kickChatMember(groupId, Number(platformUserId)).catch((e) =>
@@ -38,8 +37,6 @@ const manageGroups = (
       );
     }
   });
-
-  console.log(invites);
 
   if (isUpgrade && invites.length) {
     const message: string = `${
