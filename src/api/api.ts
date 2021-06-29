@@ -7,12 +7,14 @@ export default () => {
   const api = express();
 
   api.use(express.json());
-
   api.use(config.api.prefix, router());
 
-  api.listen(config.api.port, () =>
+  const server = api.listen(config.api.port, () =>
     logger.info(`API listening on ${config.api.port}`)
   );
+
+  process.once("SIGINT", () => server.close());
+  process.once("SIGTERM", () => server.close());
 
   return api;
 };

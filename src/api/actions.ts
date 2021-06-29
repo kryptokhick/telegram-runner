@@ -1,6 +1,7 @@
 import Bot from "../Bot";
 import { ManageGroupsParam } from "./types";
 import { UnixTime } from "../utils/utils";
+import logger from "../utils/logger";
 
 const generateInvite = async (groupId: string): Promise<string> =>
   (
@@ -20,7 +21,12 @@ const manageGroups = (
     if (isUpgrade) invites.push(await generateInvite(groupId));
     else {
       // TODO: create an own kick method with custom parameters
-      Bot.Client.kickChatMember(groupId, Number(params.platformUserId));
+      Bot.Client.kickChatMember(groupId, Number(params.platformUserId)).catch(
+        (e) =>
+          logger.error(
+            `Couldn't remove user with userId "${params.platformUserId}"${  e}`
+          )
+      );
     }
   });
 
