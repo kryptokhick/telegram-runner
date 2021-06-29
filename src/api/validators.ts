@@ -9,6 +9,6 @@ const getIdValidatorForBody = (fieldName: string) =>
 export default {
   paramTelegramdId: getIdValidatorForParam,
   bodyTelegramId: getIdValidatorForBody,
-  groupsValidator: body("groups").isArray({ min: 1 }),
+  groupsValidator: body("groupIds").isArray({ min: 1 }),
   messageValidator: body("message").isString().trim().isLength({ min: 1 })
 };
