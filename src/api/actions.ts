@@ -1,7 +1,7 @@
 import Bot from "../Bot";
 import { ManageGroupsParam } from "./types";
-import { UnixTime } from "../utils/utils";
 import logger from "../utils/logger";
+import { UnixTime } from "../utils/utils";
 
 const generateInvite = async (groupId: string): Promise<string> =>
   (
@@ -11,44 +11,56 @@ const generateInvite = async (groupId: string): Promise<string> =>
     })
   ).invite_link;
 
-const manageGroups = (
+const manageGroups = async (
   params: ManageGroupsParam,
   isUpgrade: boolean
 ): Promise<boolean> => {
-  const invites: string[] = [];
   const { platformUserId } = params;
 
-  params.groupIds.forEach(async (groupId) => {
-    if (isUpgrade) {
-      Bot.Client.getChatMember(groupId, Number(platformUserId))
-        .then(() =>
-          logger.error(
-            `Telegram user ${platformUserId} is already member ` +
-              `of the group ${groupId}`
-          )
-        )
-        .catch(async () => invites.push(await generateInvite(groupId)));
-    } else {
-      // TODO: create an own kick method with custom parameters
+  if (isUpgrade) {
+    const isMember = async (groupId: string): Promise<Boolean> => {
+      try {
+        const member = await Bot.Client.getChatMember(
+          groupId,
+          Number(platformUserId)
+        );
+        return member !== undefined && member.status === "member";
+      } catch (_) {
+        return false;
+      }
+    };
+
+    Promise.all(
+      params.groupIds.map(async (groupId) => ({
+        link: await generateInvite(groupId),
+        member: await isMember(groupId)
+      }))
+    ).then(async (groups) => {
+      const invites: string[] = [];
+      (await groups).forEach(async (group) => {
+        if (!group.member) invites.push(group.link);
+      });
+
+      if (invites.length) {
+        const message: string = `${
+          "You have 15 minutes to join these groups before the invite links " +
+          "expire:\n"
+        }${invites.join("\n")}`;
+
+        Bot.Client.sendMessage(platformUserId, message);
+      }
+    });
+  } else {
+    params.groupIds.forEach(async (groupId) =>
       Bot.Client.kickChatMember(groupId, Number(platformUserId)).catch((e) =>
         logger.error(
           `Couldn't remove Telegram user with userId "${platformUserId}"${e}`
         )
-      );
-    }
-  });
-
-  if (isUpgrade && invites.length) {
-    const message: string = `${
-      "You have 15 minutes to join these groups before the invite links " +
-      "expire:\n"
-    }${invites.join("\n")}`;
-
-    Bot.Client.sendMessage(platformUserId, message);
+      )
+    );
   }
-  // TODO: use the message that we get in the parameter
 
-  return new Promise((resolve) => resolve(true));
+  return true;
 };
 
 export { manageGroups, generateInvite };
