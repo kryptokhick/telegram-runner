@@ -20,10 +20,7 @@ const manageGroups = async (
   if (isUpgrade) {
     const isMember = async (groupId: string): Promise<Boolean> => {
       try {
-        const member = await Bot.Client.getChatMember(
-          groupId,
-          Number(platformUserId)
-        );
+        const member = await Bot.Client.getChatMember(groupId, +platformUserId);
         return member !== undefined && member.status === "member";
       } catch (_) {
         return false;
@@ -52,7 +49,7 @@ const manageGroups = async (
     });
   } else {
     params.groupIds.forEach(async (groupId) =>
-      Bot.Client.kickChatMember(groupId, Number(platformUserId)).catch((e) =>
+      Bot.Client.kickChatMember(groupId, +platformUserId).catch((e) =>
         logger.error(
           `Couldn't remove Telegram user with userId "${platformUserId}"${e}`
         )
