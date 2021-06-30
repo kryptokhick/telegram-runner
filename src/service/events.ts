@@ -5,18 +5,20 @@ import config from "../config";
 import logger from "../utils/logger";
 
 const onMessage = (ctx: any): void => {
-  ctx
-    .reply("I'm sorry, but I couldn't interpret your request.")
-    .then(() =>
-      ctx.replyWithMarkdown(
-        "You can find more information on the " +
-          "[Agora](https://agora.space/) website."
-      )
-    );
+  if (ctx.message.chat.id > 0) {
+    ctx
+      .reply("I'm sorry, but I couldn't interpret your request.")
+      .then(() =>
+        ctx.replyWithMarkdown(
+          "You can find more information on the " +
+            "[Agora](https://agora.space/) website."
+        )
+      );
+  }
 };
 
 const onChatStart = (ctx: any): void => {
-  const { message } = ctx;
+  const {message} = ctx;
 
   if (message.chat.id > 0) {
     if (new RegExp(/^\/start [0-9]+_[0-9]+$/).test(message.text)) {

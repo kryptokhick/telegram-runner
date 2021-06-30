@@ -8,7 +8,6 @@ const createRouter = () => {
   router.post(
     "/upgrade",
     [
-      validators.bodyTelegramId("groupId"),
       validators.bodyTelegramId("platformUserId"),
       validators.groupsValidator,
       validators.messageValidator
@@ -19,7 +18,6 @@ const createRouter = () => {
   router.post(
     "/downgrade",
     [
-      validators.bodyTelegramId("groupId"),
       validators.bodyTelegramId("platformUserId"),
       validators.groupsValidator,
       validators.messageValidator

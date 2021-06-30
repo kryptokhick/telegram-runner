@@ -11,7 +11,7 @@ const telegramToken = process.env.BOT_TOKEN;
 const backendUrl = process.env.BACKEND_URL;
 const api = {
   prefix: "/api",
-  port: process.env.PORT || 8990
+  port: process.env.PORT || 8991
 };
 
 if (!telegramToken)
