@@ -3,13 +3,17 @@ import { ManageGroupsParam } from "./types";
 import logger from "../utils/logger";
 import { UnixTime } from "../utils/utils";
 
-const generateInvite = async (groupId: string): Promise<string> =>
-  (
-    await Bot.Client.createChatInviteLink(groupId, {
-      expire_date: UnixTime(new Date()) + 900,
-      member_limit: 1
-    })
-  ).invite_link;
+const generateInvite = async (
+  userId: string,
+  groupId: string
+): Promise<string> => {
+  await Bot.Client.unbanChatMember(groupId, +userId);
+  const generate = await Bot.Client.createChatInviteLink(groupId, {
+    expire_date: UnixTime(new Date()) + 900,
+    member_limit: 1
+  });
+  return generate.invite_link;
+};
 
 const manageGroups = async (
   params: ManageGroupsParam,
