@@ -18,31 +18,33 @@ const onMessage = (ctx: any): void => {
 };
 
 const onChatStart = (ctx: any): void => {
-  const {message} = ctx;
+  const { message } = ctx;
 
   if (message.chat.id > 0) {
     if (new RegExp(/^\/start [0-9]+_[0-9]+$/).test(message.text)) {
       const refId = message.text.split("/start ")[1].split("_")[0];
       const platformUserId = message.from.id;
-      const groupId = message.text.split("_")[1];
+      const communityId = message.text.split("_")[1];
 
       axios
-        .post(`${config.backendUrl}/user/joinedPlatform`, {
+        .post(`${config.backendUrl}/user/getAccessibleGroupIds`, {
           refId,
           platform: config.platform,
           platformUserId,
-          groupId
+          communityId
         })
         .then((res) => {
           logger.debug(JSON.stringify(res.data));
-
-          generateInvite(groupId).then((inviteLink) =>
-            ctx.reply(
-              "Here’s your link." +
-                "It’s only active for 15 minutes and is only usable once:" +
-                `${inviteLink}`
-            )
-          );
+          const accessibleGroups: string[] = res.data;
+          accessibleGroups.forEach((groupId) => {
+            generateInvite(groupId).then((inviteLink) =>
+              ctx.reply(
+                "Here’s your link." +
+                  "It’s only active for 15 minutes and is only usable once:" +
+                  `${inviteLink}`
+              )
+            );
+          });
         })
         .catch(logger.error);
     } else onMessage(ctx);
