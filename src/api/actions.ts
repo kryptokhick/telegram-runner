@@ -33,7 +33,7 @@ const manageGroups = async (
 
     Promise.all(
       params.groupIds.map(async (groupId) => ({
-        link: await generateInvite(groupId),
+        link: await generateInvite(params.message, groupId),
         member: await isMember(groupId)
       }))
     ).then(async (groups) => {
