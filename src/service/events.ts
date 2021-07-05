@@ -11,7 +11,7 @@ const onMessage = (ctx: any): void => {
       .then(() =>
         ctx.replyWithMarkdown(
           "You can find more information on the " +
-            "[Agora](https://agora.space/) website."
+            "[Agora](https://app.agora.space/) website."
         )
       );
   }

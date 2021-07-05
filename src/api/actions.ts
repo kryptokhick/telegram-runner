@@ -1,3 +1,4 @@
+import { Markup } from "telegraf";
 import Bot from "../Bot";
 import { ManageGroupsParam } from "./types";
 import logger from "../utils/logger";
@@ -29,24 +30,34 @@ const isMember = async (groupId: string, userId: number): Promise<Boolean> => {
   }
 };
 
+const getGroupName = async (groupId: string): Promise<string> => 
+   groupId // TODO: fix this
+;
+
 const manageGroups = async (
   params: ManageGroupsParam,
   isUpgrade: boolean
 ): Promise<boolean> => {
   const { platformUserId } = params;
-  console.log(isUpgrade, platformUserId, params);
+
   if (isUpgrade) {
-    const invites: string[] = [];
+    const invites: { link: string; name: string }[] = [];
+
     await Promise.all(
       params.groupIds.map(async (groupId) => {
         try {
-          const status = await isMember(groupId, +platformUserId);
-          if (!status) {
+          if (!(await isMember(groupId, +platformUserId))) {
             const inviteLink = await generateInvite(
               params.platformUserId,
               groupId
             );
-            if (inviteLink !== undefined) invites.push(inviteLink);
+
+            if (inviteLink !== undefined) {
+              invites.push({
+                link: inviteLink,
+                name: await getGroupName(groupId)
+              });
+            }
           }
         } catch (err) {
           logger.error(err);
@@ -55,21 +66,24 @@ const manageGroups = async (
     );
 
     if (invites.length) {
-      const message: string = `${
+      Bot.Client.sendMessage(
+        platformUserId,
         "You have 15 minutes to join these groups before the invite links " +
-        "expire: \n"
-      }${invites.join("\n")}`;
-
-      Bot.Client.sendMessage(platformUserId, message);
+          "expire:",
+        Markup.inlineKeyboard([
+          invites.map((inv) => Markup.button.url(inv.name, inv.link))
+        ])
+      );
     }
   } else {
     params.groupIds.forEach(async (groupId) => {
       try {
         const member = await Bot.Client.getChatMember(groupId, +platformUserId);
+
         if (member?.status === "member") {
-          Bot.Client.kickChatMember(groupId, +platformUserId).catch((e) =>
+          Bot.Client.kickChatMember(groupId, +platformUserId).catch(() =>
             logger.error(
-              `Couldn't remove Telegram user with userId "${platformUserId}"${e}`
+              `Couldn't remove Telegram user with userId "${platformUserId}"`
             )
           );
         }
