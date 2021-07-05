@@ -30,9 +30,8 @@ const isMember = async (groupId: string, userId: number): Promise<Boolean> => {
   }
 };
 
-const getGroupName = async (groupId: string): Promise<string> => 
-   groupId // TODO: fix this
-;
+const getGroupName = async (groupId: string): Promise<string> =>
+  ((await Bot.Client.getChat(groupId)) as { title: string }).title;
 
 const manageGroups = async (
   params: ManageGroupsParam,
