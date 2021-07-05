@@ -69,9 +69,9 @@ const manageGroups = async (
         platformUserId,
         "You have 15 minutes to join these groups before the invite links " +
           "expire:",
-        Markup.inlineKeyboard([
-          invites.map((inv) => Markup.button.url(inv.name, inv.link))
-        ])
+        Markup.inlineKeyboard(
+          invites.map((inv) => [Markup.button.url(inv.name, inv.link)])
+        )
       );
     }
   } else {

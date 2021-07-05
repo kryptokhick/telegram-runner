@@ -50,9 +50,9 @@ const listCommunitiesCommand = (ctx: any): void => {
   fetchCommunitiesOfUser(ctx.message.from.id).then((results) => {
     ctx.replyWithMarkdown(
       "Please visit your communities' websites:",
-      Markup.inlineKeyboard([
-        results.map((res) => Markup.button.url(res.name, res.url))
-      ])
+      Markup.inlineKeyboard(
+        results.map((res) => [Markup.button.url(res.name, res.url)])
+      )
     );
   });
 };
