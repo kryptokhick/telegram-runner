@@ -58,7 +58,7 @@ const onUserJoined = (
 ): void => {
   axios
     .post(`${config.backendUrl}/user/joinedPlatform`, {
-      refId: "2",
+      refId,
       platform: config.platform,
       platformUserId,
       groupId
