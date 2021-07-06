@@ -105,9 +105,6 @@ const onChatMemberUpdate = (ctx: any): void => {
     logger.debug(invLink);
 
     onUserJoined(invLink, member.from.id, member.chat.id);
-
-    // TODO: check if the user fullfills the requirements
-    onUserRemoved(member.from.id, member.chat.id);
   }
 };
 
