@@ -85,11 +85,15 @@ const onUserRemoved = (platformUserId: string, groupId: string): void => {
 const onBlocked = (ctx: any): void => {
   const platformUserId = ctx.update.my_chat_member.from.id;
 
-  fetchCommunitiesOfUser(platformUserId).then((communities) =>
-    communities.forEach((community) =>
-      leaveCommunity(platformUserId, community.id)
+  logger.warn(`User "${platformUserId}" has blocked the bot.`);
+
+  fetchCommunitiesOfUser(platformUserId)
+    .then((communities) =>
+      communities.forEach((community) =>
+        leaveCommunity(platformUserId, community.id)
+      )
     )
-  );
+    .catch(logger.error);
 };
 
 const onChatMemberUpdate = (ctx: any): void => {
