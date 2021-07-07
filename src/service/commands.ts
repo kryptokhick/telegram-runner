@@ -48,12 +48,11 @@ const leaveCommand = (ctx: any): void => {
 
 const listCommunitiesCommand = (ctx: any): void => {
   fetchCommunitiesOfUser(ctx.message.from.id).then((results) => {
-    const urls = results
-      .map((result) => `[${result.name}](${result.url})`)
-      .join("\n");
-
     ctx.replyWithMarkdown(
-      `*Please visit your communities' websites:*\n${urls}`
+      "Please visit your communities' websites:",
+      Markup.inlineKeyboard(
+        results.map((res) => [Markup.button.url(res.name, res.url)])
+      )
     );
   });
 };
