@@ -25,25 +25,28 @@ export default class Bot {
     });
 
     // inbuilt commands
-    bot.start((ctx) => TGEvents.onChatStart(ctx));
-    bot.help((ctx) => TGCommands.helpCommand(ctx));
+    bot.start(TGEvents.onChatStart);
+    bot.help(TGCommands.helpCommand);
 
     // other commands
-    bot.command("leave", (ctx) => TGCommands.leaveCommand(ctx));
-    bot.command("list", (ctx) => TGCommands.listCommunitiesCommand(ctx));
+    bot.command("leave", TGCommands.leaveCommand);
+    bot.command("list", TGCommands.listCommunitiesCommand);
+    bot.command("ping", TGCommands.pingCommand);
 
     // event listeners
-    bot.on("message", (ctx) => TGEvents.onMessage(ctx));
-    bot.on("left_chat_member", (ctx) => TGEvents.onUserLeftGroup(ctx));
-    bot.on("chat_member", (ctx) => TGEvents.onChatMemberUpdate(ctx));
-    bot.on("my_chat_member", (ctx) => TGEvents.onMyChatMemberUpdate(ctx));
+    bot.on("message", TGEvents.onMessage);
+    bot.on("left_chat_member", TGEvents.onUserLeftGroup);
+    bot.on("chat_member", TGEvents.onChatMemberUpdate);
+    bot.on("my_chat_member", TGEvents.onMyChatMemberUpdate);
 
     // action listeners
-    bot.action(/^leave_confirm_[0-9]+_[a-zA-Z0-9 ,.:"'`]+$/, (ctx) =>
-      TGActions.confirmLeaveCommunityAction(ctx)
+    bot.action(
+      /^leave_confirm_[0-9]+_[a-zA-Z0-9 ,.:"'`]+$/,
+      TGActions.confirmLeaveCommunityAction
     );
-    bot.action(/^leave_confirmed_[0-9]+$/, (ctx) =>
-      TGActions.confirmedLeaveCommunityAction(ctx)
+    bot.action(
+      /^leave_confirmed_[0-9]+$/,
+      TGActions.confirmedLeaveCommunityAction
     );
 
     // starting the bot

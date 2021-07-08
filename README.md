@@ -37,12 +37,12 @@ Run the bot:
 # for development:
 npm run dev
 # or
-yarn run dev
+yarn dev
 
 # for production:
 npm run build && npm run prod
 # or
-yarn run build && yarn run prod
+yarn build && yarn run prod
 ```
 
 ## Documentation

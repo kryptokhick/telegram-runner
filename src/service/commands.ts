@@ -1,5 +1,6 @@
 import { Markup } from "telegraf";
 import { InlineKeyboardButton } from "typegram";
+import Bot from "../Bot";
 import { fetchCommunitiesOfUser } from "./common";
 
 const helpCommand = (ctx: any): void => {
@@ -57,4 +58,19 @@ const listCommunitiesCommand = (ctx: any): void => {
   });
 };
 
-export { helpCommand, leaveCommand, listCommunitiesCommand };
+const pingCommand = (ctx: any): void => {
+  const {message} = ctx.update;
+  const messageTime = new Date(message.date * 1000).getTime();
+  const userId = message.from.id;
+
+  const currTime = new Date().getTime();
+
+  Bot.Client.getChatMember(userId, userId).then((sender) => {
+    ctx.replyWithMarkdown(
+      `Pong. @${sender.user.username} latency is ${currTime - messageTime}ms.` +
+        ` API latency is ${new Date().getTime() - currTime}ms.`
+    );
+  });
+};
+
+export { helpCommand, leaveCommand, listCommunitiesCommand, pingCommand };
