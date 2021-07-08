@@ -42,7 +42,7 @@ yarn dev
 # for production:
 npm run build && npm run prod
 # or
-yarn build && yarn run prod
+yarn build && yarn prod
 ```
 
 ## Documentation
