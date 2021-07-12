@@ -59,13 +59,13 @@ const listCommunitiesCommand = (ctx: any): void => {
 };
 
 const pingCommand = (ctx: any): void => {
-  const {message} = ctx.update;
+  const { message } = ctx.update;
   const messageTime = new Date(message.date * 1000).getTime();
-  const userId = message.from.id;
+  const platformUserId = message.from.id;
 
   const currTime = new Date().getTime();
 
-  Bot.Client.getChatMember(userId, userId).then((sender) => {
+  Bot.Client.getChatMember(platformUserId, platformUserId).then((sender) => {
     ctx.replyWithMarkdown(
       `Pong. @${sender.user.username} latency is ${currTime - messageTime}ms.` +
         ` API latency is ${new Date().getTime() - currTime}ms.`
