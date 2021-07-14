@@ -95,4 +95,4 @@ const manageGroups = async (
   return true;
 };
 
-export { manageGroups, generateInvite };
+export { manageGroups, generateInvite, getGroupName };
