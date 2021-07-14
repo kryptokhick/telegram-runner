@@ -4,6 +4,7 @@ import { generateInvite, getGroupName } from "../api/actions";
 import { fetchCommunitiesOfUser, leaveCommunity } from "./common";
 import config from "../config";
 import logger from "../utils/logger";
+import Bot from "../Bot";
 
 const onMessage = (ctx: any): void => {
   if (ctx.message.chat.id > 0) {
@@ -40,7 +41,7 @@ const onChatStart = (ctx: any): void => {
           accessibleGroups.forEach(async (groupId) => {
             generateInvite(platformUserId, groupId).then(async (inviteLink) => {
               const groupName = await getGroupName(groupId);
-              ctx.reply(
+              Bot.Client.sendMessage(
                 platformUserId,
                 "Here’s your link." +
                   "It’s only active for 15 minutes and is only usable once:",
