@@ -1,15 +1,16 @@
 import { Markup } from "telegraf";
+import { getGroupName, kickUser } from "../service/common";
 import Bot from "../Bot";
 import { ManageGroupsParam } from "./types";
 import logger from "../utils/logger";
 import { UnixTime } from "../utils/utils";
 
 const generateInvite = async (
-  userId: string,
+  platformUserId: string,
   groupId: string
 ): Promise<string | undefined> => {
   try {
-    await Bot.Client.unbanChatMember(groupId, +userId);
+    await Bot.Client.unbanChatMember(groupId, +platformUserId);
     const generate = await Bot.Client.createChatInviteLink(groupId, {
       expire_date: UnixTime(new Date()) + 900,
       member_limit: 1
@@ -21,17 +22,17 @@ const generateInvite = async (
   }
 };
 
-const isMember = async (groupId: string, userId: number): Promise<Boolean> => {
+const isMember = async (
+  groupId: string,
+  platformUserId: number
+): Promise<Boolean> => {
   try {
-    const member = await Bot.Client.getChatMember(groupId, userId);
+    const member = await Bot.Client.getChatMember(groupId, platformUserId);
     return member !== undefined && member.status === "member";
   } catch (_) {
     return false;
   }
 };
-
-const getGroupName = async (groupId: string): Promise<string> =>
-  ((await Bot.Client.getChat(groupId)) as { title: string }).title;
 
 const manageGroups = async (
   params: ManageGroupsParam,
@@ -80,10 +81,10 @@ const manageGroups = async (
         const member = await Bot.Client.getChatMember(groupId, +platformUserId);
 
         if (member?.status === "member") {
-          Bot.Client.kickChatMember(groupId, +platformUserId).catch(() =>
-            logger.error(
-              `Couldn't remove Telegram user with userId "${platformUserId}"`
-            )
+          kickUser(
+            groupId,
+            platformUserId,
+            "have not fullfilled the requirements"
           );
         }
       } catch (err) {

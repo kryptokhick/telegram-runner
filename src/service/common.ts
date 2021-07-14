@@ -1,7 +1,11 @@
 import axios from "axios";
 import { CommunityResult } from "../api/types";
+import Bot from "../Bot";
 import config from "../config";
 import logger from "../utils/logger";
+
+const getGroupName = async (groupId: string): Promise<string> =>
+  ((await Bot.Client.getChat(groupId)) as { title: string }).title;
 
 const fetchCommunitiesOfUser = async (
   platformUserId: string
@@ -22,4 +26,35 @@ const leaveCommunity = (platformUserId: string, communityId: string): void => {
     .catch(logger.error);
 };
 
-export { leaveCommunity, fetchCommunitiesOfUser };
+const kickUser = (
+  groupId: string,
+  platformUserId: string,
+  reason: string
+): void => {
+  Bot.Client.kickChatMember(groupId, +platformUserId)
+    .then(async () => {
+      const groupName = await getGroupName(groupId);
+
+      Bot.Client.sendMessage(
+        platformUserId,
+        "You have been kicked from the group " +
+          `*${groupName}*, because you ${reason}\\.`,
+        {
+          parse_mode: "MarkdownV2"
+        }
+      ).catch((e) =>
+        logger.error(
+          "Couldn't send message to Telegram user " +
+            `with userId "${platformUserId}" because:\n${e}`
+        )
+      );
+    })
+    .catch((e) =>
+      logger.error(
+        `Couldn't remove Telegram user with userId "${platformUserId}"` +
+          `, because:\n${e}`
+      )
+    );
+};
+
+export { getGroupName, fetchCommunitiesOfUser, leaveCommunity, kickUser };

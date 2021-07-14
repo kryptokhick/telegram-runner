@@ -39,6 +39,7 @@ const onChatStart = (ctx: any): void => {
           logger.debug(JSON.stringify(res.data));
           const accessibleGroups: string[] = res.data;
           accessibleGroups.forEach(async (groupId) => {
+
             generateInvite(platformUserId, groupId).then(async (inviteLink) => {
               const groupName = await getGroupName(groupId);
               Bot.Client.sendMessage(
