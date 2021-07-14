@@ -38,8 +38,9 @@ const onChatStart = (ctx: any): void => {
           const accessibleGroups: string[] = res.data;
           accessibleGroups.forEach(async (groupId) => {
             generateInvite(platformUserId, groupId).then((inviteLink) =>
+              // TODO: fancy buttons
               ctx.reply(
-                "Here’s your link." +
+                "Here’s your link. " +
                   "It’s only active for 15 minutes and is only usable once:" +
                   `${inviteLink}`
               )

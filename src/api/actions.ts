@@ -1,5 +1,5 @@
 import { Markup } from "telegraf";
-import { getGroupName } from "../service/common";
+import { getGroupName, kickUser } from "../service/common";
 import Bot from "../Bot";
 import { ManageGroupsParam } from "./types";
 import logger from "../utils/logger";
@@ -81,10 +81,10 @@ const manageGroups = async (
         const member = await Bot.Client.getChatMember(groupId, +platformUserId);
 
         if (member?.status === "member") {
-          Bot.Client.kickChatMember(groupId, +platformUserId).catch(() =>
-            logger.error(
-              `Couldn't remove Telegram user with userId "${platformUserId}"`
-            )
+          kickUser(
+            groupId,
+            platformUserId,
+            "have not fullfilled the requirements"
           );
         }
       } catch (err) {
