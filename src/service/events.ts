@@ -4,6 +4,7 @@ import { generateInvite } from "../api/actions";
 import { fetchCommunitiesOfUser, getGroupName, leaveCommunity } from "./common";
 import config from "../config";
 import logger from "../utils/logger";
+import Bot from "../Bot";
 
 const onMessage = (ctx: any): void => {
   if (ctx.message.chat.id > 0) {
