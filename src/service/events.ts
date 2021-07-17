@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Markup } from "telegraf";
-import { generateInvite, getGroupName } from "../api/actions";
-import { fetchCommunitiesOfUser, leaveCommunity } from "./common";
+import { generateInvite } from "../api/actions";
+import { fetchCommunitiesOfUser, getGroupName, leaveCommunity } from "./common";
 import config from "../config";
 import logger from "../utils/logger";
 import Bot from "../Bot";
@@ -35,23 +35,39 @@ const onChatStart = (ctx: any): void => {
           platformUserId,
           communityId
         })
-        .then((res) => {
-          logger.debug(JSON.stringify(res.data));
-          const accessibleGroups: string[] = res.data;
-          accessibleGroups.forEach(async (groupId) => {
+        .then(async (res) => {
+          const invites: { link: string; name: string }[] = [];
 
-            generateInvite(platformUserId, groupId).then(async (inviteLink) => {
-              const groupName = await getGroupName(groupId);
-              Bot.Client.sendMessage(
-                platformUserId,
-                "Here’s your link." +
-                  "It’s only active for 15 minutes and is only usable once:",
-                Markup.inlineKeyboard([
-                  Markup.button.url(groupName, inviteLink!)
-                ])
-              );
-            });
-          });
+          await Promise.all(
+            res.data.map(async (groupId: string) => {
+              try {
+                const inviteLink = await generateInvite(
+                  platformUserId,
+                  groupId
+                );
+
+                if (inviteLink !== undefined) {
+                  invites.push({
+                    link: inviteLink,
+                    name: await getGroupName(groupId)
+                  });
+                }
+              } catch (err) {
+                logger.error(err);
+              }
+            })
+          );
+
+          if (invites.length) {
+            ctx.replyWithMarkdown(
+              platformUserId,
+              "You have 15 minutes to join these groups before the invite " +
+                "links expire:",
+              Markup.inlineKeyboard(
+                invites.map((inv) => [Markup.button.url(inv.name, inv.link)])
+              )
+            );
+          }
         })
         .catch(logger.error);
     } else onMessage(ctx);
