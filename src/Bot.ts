@@ -59,6 +59,10 @@ export default class Bot {
       ]
     });
 
+    bot.catch((err) => {
+      logger.error(err);
+    });
+
     // enable graceful stop
     process.once("SIGINT", () => bot.stop("SIGINT"));
     process.once("SIGTERM", () => bot.stop("SIGTERM"));
