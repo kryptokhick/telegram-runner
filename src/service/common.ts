@@ -17,7 +17,7 @@ const fetchCommunitiesOfUser = async (
 
 const leaveCommunity = (platformUserId: string, communityId: string): void => {
   axios
-    .post(`${config.backendUrl}/user/left`, {
+    .post(`${config.backendUrl}/user/removeFromPlatform`, {
       platformUserId,
       platform: config.platform,
       communityId
