@@ -5,23 +5,6 @@ import { ManageGroupsParam } from "./types";
 import logger from "../utils/logger";
 import { UnixTime } from "../utils/utils";
 
-const generateInvite = async (
-  platformUserId: string,
-  groupId: string
-): Promise<string | undefined> => {
-  try {
-    await Bot.Client.unbanChatMember(groupId, +platformUserId);
-    const generate = await Bot.Client.createChatInviteLink(groupId, {
-      expire_date: UnixTime(new Date()) + 900,
-      member_limit: 1
-    });
-    return generate.invite_link;
-  } catch (err) {
-    logger.error(err);
-    return undefined;
-  }
-};
-
 const isMember = async (
   groupId: string,
   platformUserId: number
@@ -31,6 +14,26 @@ const isMember = async (
     return member !== undefined && member.status === "member";
   } catch (_) {
     return false;
+  }
+};
+
+const generateInvite = async (
+  platformUserId: string,
+  groupId: string
+): Promise<string | undefined> => {
+  try {
+    if (!isMember(groupId, +platformUserId)) {
+      await Bot.Client.unbanChatMember(groupId, +platformUserId);
+      const generate = await Bot.Client.createChatInviteLink(groupId, {
+        expire_date: UnixTime(new Date()) + 900,
+        member_limit: 1
+      });
+      return generate.invite_link;
+    }
+    return undefined;
+  } catch (err) {
+    logger.error(err);
+    return undefined;
   }
 };
 
@@ -73,7 +76,7 @@ const manageGroups = async (
         Markup.inlineKeyboard(
           invites.map((inv) => [Markup.button.url(inv.name, inv.link)])
         )
-      );
+      ).catch((err) => logger.error(err));
     }
   } else {
     params.groupIds.forEach(async (groupId) => {

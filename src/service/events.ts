@@ -4,18 +4,21 @@ import { generateInvite } from "../api/actions";
 import { fetchCommunitiesOfUser, getGroupName, leaveCommunity } from "./common";
 import config from "../config";
 import logger from "../utils/logger";
-import Bot from "../Bot";
 
 const onMessage = (ctx: any): void => {
   if (ctx.message.chat.id > 0) {
-    ctx
-      .reply("I'm sorry, but I couldn't interpret your request.")
-      .then(() =>
-        ctx.replyWithMarkdown(
-          "You can find more information on the " +
-            "[Agora](https://app.agora.space/) website."
-        )
-      );
+    try {
+      ctx
+        .reply("I'm sorry, but I couldn't interpret your request.")
+        .then(() =>
+          ctx.replyWithMarkdown(
+            "You can find more information on the " +
+              "[Agora](https://app.agora.space/) website."
+          )
+        );
+    } catch (err) {
+      logger.error(err);
+    }
   }
 };
 
@@ -59,14 +62,18 @@ const onChatStart = (ctx: any): void => {
           );
 
           if (invites.length) {
-            ctx.replyWithMarkdown(
-              platformUserId,
-              "You have 15 minutes to join these groups before the invite " +
-                "links expire:",
-              Markup.inlineKeyboard(
-                invites.map((inv) => [Markup.button.url(inv.name, inv.link)])
-              )
-            );
+            try {
+              ctx.replyWithMarkdown(
+                platformUserId,
+                "You have 15 minutes to join these groups before the invite " +
+                  "links expire:",
+                Markup.inlineKeyboard(
+                  invites.map((inv) => [Markup.button.url(inv.name, inv.link)])
+                )
+              );
+            } catch (err) {
+              logger.error(err);
+            }
           }
         })
         .catch(logger.error);
