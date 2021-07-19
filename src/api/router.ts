@@ -25,6 +25,12 @@ const createRouter = () => {
     controller.downgrade
   );
 
+  router.post(
+    "/isMember",
+    [validators.bodyTelegramId("platformUserId"), validators.groupsValidator],
+    controller.isMember
+  );
+
   return router;
 };
 

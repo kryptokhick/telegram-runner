@@ -99,4 +99,4 @@ const manageGroups = async (
   return true;
 };
 
-export { manageGroups, generateInvite, getGroupName };
+export { manageGroups, generateInvite, getGroupName, isMember };

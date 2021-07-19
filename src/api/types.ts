@@ -5,6 +5,11 @@ type ManageGroupsParam = {
   message       : string;
 };
 
+type IsMemberParam = {
+  platformUserId: string;
+  groupIds: string[];
+};
+
 // prettier-ignore
 type CommunityResult = {
   id              : string;
@@ -26,4 +31,10 @@ class ActionError extends Error {
   }
 }
 
-export { ManageGroupsParam, CommunityResult, ErrorResult, ActionError };
+export {
+  ManageGroupsParam,
+  IsMemberParam,
+  CommunityResult,
+  ErrorResult,
+  ActionError
+};
