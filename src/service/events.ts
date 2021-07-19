@@ -60,7 +60,6 @@ const onChatStart = (ctx: any): void => {
 
           if (invites.length) {
             ctx.replyWithMarkdown(
-              platformUserId,
               "You have 15 minutes to join these groups before the invite " +
                 "links expire:",
               Markup.inlineKeyboard(
