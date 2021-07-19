@@ -30,6 +30,13 @@ const onChatStart = (ctx: any): void => {
       const refId = message.text.split("/start ")[1].split("_")[0];
       const platformUserId = message.from.id;
       const communityId = message.text.split("_")[1];
+      try {
+        ctx.reply(
+          "Thank you for joining, I'll send the invites as soon as possible."
+        );
+      } catch (error) {
+        logger.error(error);
+      }
 
       axios
         .post(`${config.backendUrl}/user/getAccessibleGroupIds`, {
