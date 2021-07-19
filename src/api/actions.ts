@@ -11,6 +11,7 @@ const isMember = async (
 ): Promise<Boolean> => {
   try {
     const member = await Bot.Client.getChatMember(groupId, platformUserId);
+    console.log(member);
     return member !== undefined && member.status === "member";
   } catch (_) {
     return false;
@@ -22,7 +23,9 @@ const generateInvite = async (
   groupId: string
 ): Promise<string | undefined> => {
   try {
-    if (!isMember(groupId, +platformUserId)) {
+    const isTelegramUser = await isMember(groupId, +platformUserId);
+    if (!isTelegramUser) {
+      console.log("itt");
       await Bot.Client.unbanChatMember(groupId, +platformUserId);
       const generate = await Bot.Client.createChatInviteLink(groupId, {
         expire_date: UnixTime(new Date()) + 900,
