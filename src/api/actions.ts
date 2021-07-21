@@ -68,11 +68,11 @@ const manageGroups = async (
               });
             }
           } else {
-            result = result && false;
+            result = false;
           }
         } catch (err) {
           logger.error(err);
-          result = result && false;
+          result = false;
         }
       })
     );
@@ -89,7 +89,7 @@ const manageGroups = async (
         );
       } catch (err) {
         logger.error(err);
-        result = result && false;
+        result = false;
       }
     }
   } else {
@@ -105,13 +105,13 @@ const manageGroups = async (
               "have not fullfilled the requirements"
             );
           } else {
-            result = result && false;
+            result = false;
           }
         })
       );
     } catch (err) {
       logger.error(err);
-      result = result && false;
+      result = false;
     }
   }
 
