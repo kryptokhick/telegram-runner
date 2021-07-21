@@ -23,6 +23,7 @@ const generateInvite = async (
 ): Promise<string | undefined> => {
   try {
     const isTelegramUser = await isMember(groupId, +platformUserId);
+
     if (!isTelegramUser) {
       await Bot.Client.unbanChatMember(groupId, +platformUserId);
       const generate = await Bot.Client.createChatInviteLink(groupId, {
@@ -44,13 +45,17 @@ const manageGroups = async (
 ): Promise<boolean> => {
   const { platformUserId } = params;
 
+  let result: boolean = true;
+
   if (isUpgrade) {
     const invites: { link: string; name: string }[] = [];
 
     await Promise.all(
       params.groupIds.map(async (groupId) => {
+        const member = await isMember(groupId, +platformUserId);
+
         try {
-          if (!(await isMember(groupId, +platformUserId))) {
+          if (!member) {
             const inviteLink = await generateInvite(
               params.platformUserId,
               groupId
@@ -62,42 +67,55 @@ const manageGroups = async (
                 name: await getGroupName(groupId)
               });
             }
+          } else {
+            result = false;
           }
         } catch (err) {
           logger.error(err);
+          result = false;
         }
       })
     );
 
     if (invites.length) {
-      Bot.Client.sendMessage(
-        platformUserId,
-        "You have 15 minutes to join these groups before the invite links " +
-          "expire:",
-        Markup.inlineKeyboard(
-          invites.map((inv) => [Markup.button.url(inv.name, inv.link)])
-        )
-      ).catch((err) => logger.error(err));
-    }
-  } else {
-    params.groupIds.forEach(async (groupId) => {
       try {
-        const member = await Bot.Client.getChatMember(groupId, +platformUserId);
-
-        if (member?.status === "member") {
-          kickUser(
-            groupId,
-            platformUserId,
-            "have not fullfilled the requirements"
-          );
-        }
+        await Bot.Client.sendMessage(
+          platformUserId,
+          "You have 15 minutes to join these groups before the invite links " +
+            "expire:",
+          Markup.inlineKeyboard(
+            invites.map((inv) => [Markup.button.url(inv.name, inv.link)])
+          )
+        );
       } catch (err) {
         logger.error(err);
+        result = false;
       }
-    });
+    }
+  } else {
+    try {
+      await Promise.all(
+        params.groupIds.map(async (groupId) => {
+          const member = await isMember(groupId, +platformUserId);
+
+          if (member) {
+            kickUser(
+              groupId,
+              platformUserId,
+              "have not fullfilled the requirements"
+            );
+          } else {
+            result = false;
+          }
+        })
+      );
+    } catch (err) {
+      logger.error(err);
+      result = false;
+    }
   }
 
-  return true;
+  return result;
 };
 
 export { manageGroups, generateInvite, getGroupName, isMember };
