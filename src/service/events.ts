@@ -27,15 +27,12 @@ const onChatStart = async (ctx: any): Promise<void> => {
       const refId = message.text.split("/start ")[1].split("_")[0];
       const platformUserId = message.from.id;
       const communityId = message.text.split("_")[1];
-      try {
-        ctx.reply(
-          "Thank you for joining, I'll send the invites as soon as possible."
-        );
-      } catch (error) {
-        logger.error(error);
-      }
 
       try {
+        await ctx.reply(
+          "Thank you for joining, I'll send the invites as soon as possible."
+        );
+
         const res = await axios.post(
           `${config.backendUrl}/user/getAccessibleGroupIds`,
           {
@@ -46,42 +43,29 @@ const onChatStart = async (ctx: any): Promise<void> => {
           }
         );
 
-        {
-          const invites: { link: string; name: string }[] = [];
+        const invites: { link: string; name: string }[] = [];
 
-          await Promise.all(
-            res.data.map(async (groupId: string) => {
-              try {
-                const inviteLink = await generateInvite(
-                  platformUserId,
-                  groupId
-                );
+        await Promise.all(
+          res.data.map(async (groupId: string) => {
+            const inviteLink = await generateInvite(platformUserId, groupId);
 
-                if (inviteLink !== undefined) {
-                  invites.push({
-                    link: inviteLink,
-                    name: await getGroupName(groupId)
-                  });
-                }
-              } catch (err) {
-                logger.error(err);
-              }
-            })
-          );
-
-          if (invites.length) {
-            try {
-              ctx.replyWithMarkdown(
-                "You have 15 minutes to join these groups before the invite " +
-                  "links expire:",
-                Markup.inlineKeyboard(
-                  invites.map((inv) => [Markup.button.url(inv.name, inv.link)])
-                )
-              );
-            } catch (err) {
-              logger.error(err);
+            if (inviteLink !== undefined) {
+              invites.push({
+                link: inviteLink,
+                name: await getGroupName(groupId)
+              });
             }
-          }
+          })
+        );
+
+        if (invites.length) {
+          ctx.replyWithMarkdown(
+            "You have 15 minutes to join these groups before the invite " +
+              "links expire:",
+            Markup.inlineKeyboard(
+              invites.map((inv) => [Markup.button.url(inv.name, inv.link)])
+            )
+          );
         }
       } catch (err) {
         logger.error(err);

@@ -46,23 +46,18 @@ const kickUser = async (
 
     const groupName = await getGroupName(groupId);
 
-    Bot.Client.sendMessage(
+    await Bot.Client.sendMessage(
       platformUserId,
       "You have been kicked from the group " +
         `*${groupName}*, because you ${reason}\\.`,
       {
         parse_mode: "MarkdownV2"
       }
-    ).catch((e) =>
-      logger.error(
-        "Couldn't send message to Telegram user " +
-          `with userId "${platformUserId}" because:\n${e}`
-      )
     );
   } catch (err) {
     logger.error(
-      `Couldn't remove Telegram user with userId "${platformUserId}"` +
-        `, because:\n${err}`
+      "An error occured while trying to remove a Telegram user with userId " +
+        `"${platformUserId}", because:\n${err}`
     );
   }
 };
