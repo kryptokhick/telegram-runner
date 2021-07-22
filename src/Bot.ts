@@ -19,9 +19,10 @@ export default class Bot {
     // registering middleware to log the duration of updates
     bot.use(async (_, next) => {
       const start = Date.now();
-      return next().then(async () =>
-        logger.verbose(`response time ${Date.now() - start}ms`)
-      );
+
+      await next();
+
+      logger.verbose(`response time ${Date.now() - start}ms`);
     });
 
     // inbuilt commands

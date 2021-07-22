@@ -6,7 +6,7 @@ import { getErrorResult } from "../utils/utils";
 import logger from "../utils/logger";
 
 const controller = {
-  upgrade: (req: Request, res: Response): void => {
+  upgrade: async (req: Request, res: Response): Promise<void> => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -16,17 +16,16 @@ const controller = {
 
     const params: ManageGroupsParam = req.body;
 
-    manageGroups(params, true)
-      .then((result) => {
-        res.status(200).json(result);
-      })
-      .catch((error) => {
-        const errorMsg = getErrorResult(error);
-        res.status(400).json(errorMsg);
-      });
+    try {
+      const result = await manageGroups(params, true);
+      res.status(200).json(result);
+    } catch (err) {
+      const errorMsg = getErrorResult(err);
+      res.status(400).json(errorMsg);
+    }
   },
 
-  downgrade: (req: Request, res: Response): void => {
+  downgrade: async (req: Request, res: Response): Promise<void> => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -36,14 +35,13 @@ const controller = {
 
     const params: ManageGroupsParam = req.body;
 
-    manageGroups(params, false)
-      .then((result) => {
-        res.status(200).json(result);
-      })
-      .catch((error) => {
-        const errorMsg = getErrorResult(error);
-        res.status(400).json(errorMsg);
-      });
+    try {
+      const result = await manageGroups(params, false);
+      res.status(200).json(result);
+    } catch (err) {
+      const errorMsg = getErrorResult(err);
+      res.status(400).json(errorMsg);
+    }
   },
 
   isMember: async (req: Request, res: Response): Promise<void> => {

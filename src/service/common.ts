@@ -15,47 +15,51 @@ const fetchCommunitiesOfUser = async (
       .data as CommunityResult[]
   ).filter((community) => community.telegramIsMember);
 
-const leaveCommunity = (platformUserId: string, communityId: string): void => {
-  axios
-    .post(`${config.backendUrl}/user/removeFromPlatform`, {
-      platformUserId,
-      platform: config.platform,
-      communityId,
-      triggerKick: true
-    })
-    .then((res) => logger.debug(JSON.stringify(res.data)))
-    .catch(logger.error);
+const leaveCommunity = async (
+  platformUserId: string,
+  communityId: string
+): Promise<void> => {
+  try {
+    const res = await axios.post(
+      `${config.backendUrl}/user/removeFromPlatform`,
+      {
+        platformUserId,
+        platform: config.platform,
+        communityId,
+        triggerKick: true
+      }
+    );
+
+    logger.debug(JSON.stringify(res.data));
+  } catch (err) {
+    logger.error(err);
+  }
 };
 
-const kickUser = (
+const kickUser = async (
   groupId: string,
   platformUserId: string,
   reason: string
-): void => {
-  Bot.Client.kickChatMember(groupId, +platformUserId)
-    .then(async () => {
-      const groupName = await getGroupName(groupId);
+): Promise<void> => {
+  try {
+    await Bot.Client.kickChatMember(groupId, +platformUserId);
 
-      Bot.Client.sendMessage(
-        platformUserId,
-        "You have been kicked from the group " +
-          `*${groupName}*, because you ${reason}\\.`,
-        {
-          parse_mode: "MarkdownV2"
-        }
-      ).catch((e) =>
-        logger.error(
-          "Couldn't send message to Telegram user " +
-            `with userId "${platformUserId}" because:\n${e}`
-        )
-      );
-    })
-    .catch((e) =>
-      logger.error(
-        `Couldn't remove Telegram user with userId "${platformUserId}"` +
-          `, because:\n${e}`
-      )
+    const groupName = await getGroupName(groupId);
+
+    await Bot.Client.sendMessage(
+      platformUserId,
+      "You have been kicked from the group " +
+        `*${groupName}*, because you ${reason}\\.`,
+      {
+        parse_mode: "MarkdownV2"
+      }
     );
+  } catch (err) {
+    logger.error(
+      "An error occured while trying to remove a Telegram user with userId " +
+        `"${platformUserId}", because:\n${err}`
+    );
+  }
 };
 
 export { getGroupName, fetchCommunitiesOfUser, leaveCommunity, kickUser };

@@ -5,24 +5,21 @@ import { fetchCommunitiesOfUser, getGroupName, leaveCommunity } from "./common";
 import config from "../config";
 import logger from "../utils/logger";
 
-const onMessage = (ctx: any): void => {
+const onMessage = async (ctx: any): Promise<void> => {
   if (ctx.message.chat.id > 0) {
     try {
-      ctx
-        .reply("I'm sorry, but I couldn't interpret your request.")
-        .then(() =>
-          ctx.replyWithMarkdown(
-            "You can find more information on the " +
-              "[Agora](https://app.agora.space/) website."
-          )
-        );
+      await ctx.reply("I'm sorry, but I couldn't interpret your request.");
+      await ctx.replyWithMarkdown(
+        "You can find more information on the " +
+          "[Agora](https://app.agora.space/) website."
+      );
     } catch (err) {
       logger.error(err);
     }
   }
 };
 
-const onChatStart = (ctx: any): void => {
+const onChatStart = async (ctx: any): Promise<void> => {
   const { message } = ctx;
 
   if (message.chat.id > 0) {
@@ -30,106 +27,109 @@ const onChatStart = (ctx: any): void => {
       const refId = message.text.split("/start ")[1].split("_")[0];
       const platformUserId = message.from.id;
       const communityId = message.text.split("_")[1];
+
       try {
-        ctx.reply(
+        await ctx.reply(
           "Thank you for joining, I'll send the invites as soon as possible."
         );
-      } catch (error) {
-        logger.error(error);
-      }
 
-      axios
-        .post(`${config.backendUrl}/user/getAccessibleGroupIds`, {
-          refId,
-          platform: config.platform,
-          platformUserId,
-          communityId
-        })
-        .then(async (res) => {
-          const invites: { link: string; name: string }[] = [];
-
-          await Promise.all(
-            res.data.map(async (groupId: string) => {
-              try {
-                const inviteLink = await generateInvite(
-                  platformUserId,
-                  groupId
-                );
-
-                if (inviteLink !== undefined) {
-                  invites.push({
-                    link: inviteLink,
-                    name: await getGroupName(groupId)
-                  });
-                }
-              } catch (err) {
-                logger.error(err);
-              }
-            })
-          );
-
-          if (invites.length) {
-            try {
-              ctx.replyWithMarkdown(
-                "You have 15 minutes to join these groups before the invite " +
-                  "links expire:",
-                Markup.inlineKeyboard(
-                  invites.map((inv) => [Markup.button.url(inv.name, inv.link)])
-                )
-              );
-            } catch (err) {
-              logger.error(err);
-            }
+        const res = await axios.post(
+          `${config.backendUrl}/user/getAccessibleGroupIds`,
+          {
+            refId,
+            platform: config.platform,
+            platformUserId,
+            communityId
           }
-        })
-        .catch(logger.error);
+        );
+
+        const invites: { link: string; name: string }[] = [];
+
+        await Promise.all(
+          res.data.map(async (groupId: string) => {
+            const inviteLink = await generateInvite(platformUserId, groupId);
+
+            if (inviteLink !== undefined) {
+              invites.push({
+                link: inviteLink,
+                name: await getGroupName(groupId)
+              });
+            }
+          })
+        );
+
+        if (invites.length) {
+          ctx.replyWithMarkdown(
+            "You have 15 minutes to join these groups before the invite " +
+              "links expire:",
+            Markup.inlineKeyboard(
+              invites.map((inv) => [Markup.button.url(inv.name, inv.link)])
+            )
+          );
+        }
+      } catch (err) {
+        logger.error(err);
+      }
     } else onMessage(ctx);
   }
 };
 
-const onUserJoined = (
+const onUserJoined = async (
   refId: string,
   platformUserId: string,
   groupId: string
-): void => {
-  axios
-    .post(`${config.backendUrl}/user/joinedPlatform`, {
+): Promise<void> => {
+  try {
+    const res = await axios.post(`${config.backendUrl}/user/joinedPlatform`, {
       refId,
       platform: config.platform,
       platformUserId,
       groupId
-    })
-    .then((res) => logger.debug(JSON.stringify(res.data)))
-    .catch(logger.error);
+    });
+    logger.debug(JSON.stringify(res.data));
+  } catch (err) {
+    logger.error(err);
+  }
 };
 
 const onUserLeftGroup = (ctx: any): void => {
   ctx.reply(`Bye, ${ctx.message.left_chat_member.first_name} 😢`);
 };
 
-const onUserRemoved = (platformUserId: string, groupId: string): void => {
-  axios
-    .post(`${config.backendUrl}/user/removeFromPlatform`, {
-      platform: config.platform,
-      platformUserId,
-      groupId
-    })
-    .then((res) => logger.debug(JSON.stringify(res.data)))
-    .catch(logger.error);
+const onUserRemoved = async (
+  platformUserId: string,
+  groupId: string
+): Promise<void> => {
+  try {
+    const res = await axios.post(
+      `${config.backendUrl}/user/removeFromPlatform`,
+      {
+        platform: config.platform,
+        platformUserId,
+        groupId
+      }
+    );
+
+    logger.debug(JSON.stringify(res.data));
+  } catch (err) {
+    logger.error(err);
+  }
 };
 
-const onBlocked = (ctx: any): void => {
+const onBlocked = async (ctx: any): Promise<void> => {
   const platformUserId = ctx.update.my_chat_member.from.id;
 
   logger.warn(`User "${platformUserId}" has blocked the bot.`);
 
-  fetchCommunitiesOfUser(platformUserId)
-    .then((communities) =>
-      communities.forEach((community) =>
-        leaveCommunity(platformUserId, community.id)
-      )
-    )
-    .catch(logger.error);
+  try {
+    const communities = await fetchCommunitiesOfUser(platformUserId);
+
+    communities.forEach((community) =>
+      leaveCommunity(platformUserId, community.id)
+    );
+  } catch (err) {
+    logger.error(err);
+  }
 };
 
 const onChatMemberUpdate = (ctx: any): void => {

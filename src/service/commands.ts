@@ -1,6 +1,7 @@
 import { Markup } from "telegraf";
 import { InlineKeyboardButton } from "typegram";
 import Bot from "../Bot";
+import logger from "../utils/logger";
 import { fetchCommunitiesOfUser } from "./common";
 
 const helpCommand = (ctx: any): void => {
@@ -47,30 +48,41 @@ const leaveCommand = (ctx: any): void => {
   }
 };
 
-const listCommunitiesCommand = (ctx: any): void => {
-  fetchCommunitiesOfUser(ctx.message.from.id).then((results) => {
-    ctx.replyWithMarkdown(
+const listCommunitiesCommand = async (ctx: any): Promise<void> => {
+  try {
+    const results = await fetchCommunitiesOfUser(ctx.message.from.id);
+
+    await ctx.replyWithMarkdown(
       "Please visit your communities' websites:",
       Markup.inlineKeyboard(
         results.map((res) => [Markup.button.url(res.name, res.url)])
       )
     );
-  });
+  } catch (err) {
+    logger.error(err);
+  }
 };
 
-const pingCommand = (ctx: any): void => {
+const pingCommand = async (ctx: any): Promise<void> => {
   const { message } = ctx.update;
   const messageTime = new Date(message.date * 1000).getTime();
   const platformUserId = message.from.id;
 
   const currTime = new Date().getTime();
 
-  Bot.Client.getChatMember(platformUserId, platformUserId).then((sender) => {
-    ctx.replyWithMarkdown(
+  try {
+    const sender = await Bot.Client.getChatMember(
+      platformUserId,
+      platformUserId
+    );
+
+    await ctx.replyWithMarkdown(
       `Pong. @${sender.user.username} latency is ${currTime - messageTime}ms.` +
         ` API latency is ${new Date().getTime() - currTime}ms.`
     );
-  });
+  } catch (err) {
+    logger.error(err);
+  }
 };
 
 export { helpCommand, leaveCommand, listCommunitiesCommand, pingCommand };
