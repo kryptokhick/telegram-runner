@@ -43,7 +43,7 @@ const leaveCommand = async (ctx: any): Promise<void> => {
       `${config.backendUrl}/user/getUserCommunitiesByTelegramId/${ctx.message.from.id}`
     );
 
-    if (ctx.message.chat.id > 0) {
+    if (ctx.message.chat.id > 0 && res.data.length > 0) {
       const communityList: InlineKeyboardButton[][] = res.data.map(
         (comm: { id: string; name: string }) => [
           Markup.button.callback(
