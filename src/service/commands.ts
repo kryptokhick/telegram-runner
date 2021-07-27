@@ -1,6 +1,8 @@
+import axios from "axios";
 import { Markup } from "telegraf";
 import { InlineKeyboardButton } from "typegram";
 import Bot from "../Bot";
+import config from "../config";
 import logger from "../utils/logger";
 import { fetchCommunitiesOfUser } from "./common";
 
@@ -35,16 +37,32 @@ const helpCommand = (ctx: any): void => {
   });
 };
 
-const leaveCommand = (ctx: any): void => {
-  if (ctx.message.chat.id > 0) {
-    const communityList: InlineKeyboardButton[][] = [
-      [Markup.button.callback("Agora", "leave_confirm_0_Agora")]
-    ];
-
-    ctx.replyWithMarkdown(
-      "Choose the community you want to leave from the list below:",
-      Markup.inlineKeyboard(communityList)
+const leaveCommand = async (ctx: any): Promise<void> => {
+  try {
+    const res = await axios.get(
+      `${config.backendUrl}/user/getUserCommunitiesByTelegramId/${ctx.message.from.id}`
     );
+
+    if (ctx.message.chat.id > 0) {
+      const communityList: InlineKeyboardButton[][] = res.data.map(
+        (comm: { id: string; name: string }) => [
+          Markup.button.callback(
+            comm.name,
+            `leave_confirm_${comm.id}_${comm.name}`
+          )
+        ]
+      );
+
+      await ctx.replyWithMarkdown(
+        "Choose the community you want to leave from the list below:",
+        Markup.inlineKeyboard(communityList)
+      );
+    } else {
+      await ctx.reply("You are not a member of any community.");
+    }
+  } catch (err) {
+    console.log(err);
+    logger.error(err);
   }
 };
 
