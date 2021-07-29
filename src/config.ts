@@ -24,5 +24,5 @@ export default {
   telegramToken,
   backendUrl,
   api,
-  platform: "telegram"
+  platform: "TELEGRAM"
 };
