@@ -49,10 +49,7 @@ const kickUser = async (
     await Bot.Client.sendMessage(
       platformUserId,
       "You have been kicked from the group " +
-        `*${groupName}*, because you ${reason}\\.`,
-      {
-        parse_mode: "MarkdownV2"
-      }
+        `*${groupName}*, because you ${reason}\\.`
     );
   } catch (err) {
     logger.error(
