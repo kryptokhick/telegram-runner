@@ -3,22 +3,38 @@ import { CommunityResult } from "../api/types";
 import Bot from "../Bot";
 import config from "../config";
 import logger from "../utils/logger";
+import { logAxiosResponse } from "../utils/utils";
 
 const getGroupName = async (groupId: string): Promise<string> =>
   ((await Bot.Client.getChat(groupId)) as { title: string }).title;
 
 const fetchCommunitiesOfUser = async (
   platformUserId: string
-): Promise<CommunityResult[]> =>
-  (
-    (await axios.get(`${config.backendUrl}/communities/${platformUserId}`))
-      .data as CommunityResult[]
-  ).filter((community) => community.telegramIsMember);
+): Promise<CommunityResult[]> => {
+  logger.verbose(
+    `Called fetchCommunitiesOfUser, platformUserId=${platformUserId}`
+  );
+
+  const res = await axios.get(
+    `${config.backendUrl}/communities/${platformUserId}`
+  );
+
+  logAxiosResponse(res);
+
+  return (res.data as CommunityResult[]).filter(
+    (community) => community.telegramIsMember
+  );
+};
 
 const leaveCommunity = async (
   platformUserId: string,
   communityId: string
 ): Promise<void> => {
+  logger.verbose(
+    `Called leaveCommunity, platformUserId=${platformUserId}, communityId=${ 
+      communityId}`
+  );
+
   try {
     const res = await axios.post(
       `${config.backendUrl}/user/removeFromPlatform`,
@@ -29,6 +45,8 @@ const leaveCommunity = async (
         triggerKick: true
       }
     );
+
+    logAxiosResponse(res);
 
     logger.debug(JSON.stringify(res.data));
   } catch (err) {
@@ -41,6 +59,11 @@ const kickUser = async (
   platformUserId: string,
   reason: string
 ): Promise<void> => {
+  logger.verbose(
+    `Called kickUser, groupId=${groupId}, platformUserId=${platformUserId}, ` +
+      `reason=${reason}`
+  );
+
   try {
     await Bot.Client.kickChatMember(groupId, +platformUserId);
 

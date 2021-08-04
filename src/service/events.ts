@@ -4,6 +4,7 @@ import { generateInvite } from "../api/actions";
 import { fetchCommunitiesOfUser, getGroupName, leaveCommunity } from "./common";
 import config from "../config";
 import logger from "../utils/logger";
+import { logAxiosResponse } from "../utils/utils";
 
 const onMessage = async (ctx: any): Promise<void> => {
   if (ctx.message.chat.id > 0) {
@@ -24,9 +25,8 @@ const onChatStart = async (ctx: any): Promise<void> => {
 
   if (message.chat.id > 0) {
     if (new RegExp(/^\/start [0-9]+_[0-9]+$/).test(message.text)) {
-      const refId = message.text.split("/start ")[1].split("_")[0];
+      const [refId, communityId] = message.text.split("/start ")[1].split("_");
       const platformUserId = message.from.id;
-      const communityId = message.text.split("_")[1];
 
       try {
         await ctx.reply(
@@ -43,6 +43,8 @@ const onChatStart = async (ctx: any): Promise<void> => {
           }
         );
 
+        logAxiosResponse(res);
+
         const invites: { link: string; name: string }[] = [];
 
         await Promise.all(
@@ -58,6 +60,8 @@ const onChatStart = async (ctx: any): Promise<void> => {
           })
         );
 
+        logger.verbose(`inviteLink: ${invites}`);
+
         if (invites.length) {
           ctx.replyWithMarkdown(
             "You have 15 minutes to join these groups before the invite " +
@@ -65,6 +69,11 @@ const onChatStart = async (ctx: any): Promise<void> => {
             Markup.inlineKeyboard(
               invites.map((inv) => [Markup.button.url(inv.name, inv.link)])
             )
+          );
+        } else {
+          ctx.reply(
+            "You are already a member of the groups of this community " +
+              "so you will not receive any invite links."
           );
         }
       } catch (err) {
@@ -86,6 +95,9 @@ const onUserJoined = async (
       platformUserId,
       groupId
     });
+
+    logAxiosResponse(res);
+
     logger.debug(JSON.stringify(res.data));
   } catch (err) {
     logger.error(err);
@@ -110,6 +122,8 @@ const onUserRemoved = async (
       }
     );
 
+    logAxiosResponse(res);
+
     logger.debug(JSON.stringify(res.data));
   } catch (err) {
     logger.error(err);
@@ -119,7 +133,7 @@ const onUserRemoved = async (
 const onBlocked = async (ctx: any): Promise<void> => {
   const platformUserId = ctx.update.my_chat_member.from.id;
 
-  logger.warn(`User "${platformUserId}" has blocked the bot.`);
+  logger.verbose(`User "${platformUserId}" has blocked the bot.`);
 
   try {
     const communities = await fetchCommunitiesOfUser(platformUserId);
@@ -138,7 +152,10 @@ const onChatMemberUpdate = (ctx: any): void => {
   if (member.invite_link) {
     const invLink = member.invite_link.invite_link;
 
-    logger.debug(invLink);
+    logger.verbose(
+      `function: onChatMemberUpdate, user: ${member.from.id}, ` +
+        `chat: ${member.chat.id}, invite: ${invLink}`
+    );
 
     onUserJoined(invLink, member.from.id, member.chat.id);
   }
