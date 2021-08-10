@@ -64,8 +64,7 @@ const onChatStart = async (ctx: any): Promise<void> => {
 
         if (invites.length) {
           ctx.replyWithMarkdown(
-            "You have 15 minutes to join these groups before the invite " +
-              "links expire:",
+            "Use the following invite links to join the groups you unlocked:",
             Markup.inlineKeyboard(
               invites.map((inv) => [Markup.button.url(inv.name, inv.link)])
             )

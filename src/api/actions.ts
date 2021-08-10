@@ -3,7 +3,6 @@ import { getGroupName, kickUser } from "../service/common";
 import Bot from "../Bot";
 import { ManageGroupsParam } from "./types";
 import logger from "../utils/logger";
-import { UnixTime } from "../utils/utils";
 
 const isMember = async (
   groupId: string,
@@ -32,12 +31,11 @@ const generateInvite = async (
 
   try {
     const isTelegramUser = await isMember(groupId, +platformUserId);
-    logger.verbose(`isMember result: ${isTelegramUser}`);
+    logger.verbose(`groupId=groupId, isMember=${isTelegramUser}`);
 
     if (!isTelegramUser) {
       await Bot.Client.unbanChatMember(groupId, +platformUserId);
       const generate = await Bot.Client.createChatInviteLink(groupId, {
-        expire_date: UnixTime(new Date()) + 900,
         member_limit: 1
       });
       return generate.invite_link;
@@ -95,8 +93,7 @@ const manageGroups = async (
       try {
         await Bot.Client.sendMessage(
           platformUserId,
-          "You have 15 minutes to join these groups before the invite links " +
-            "expire:",
+          `You have unlocked ${invites.length} new groups:`,
           Markup.inlineKeyboard(
             invites.map((inv) => [Markup.button.url(inv.name, inv.link)])
           )
