@@ -1,5 +1,8 @@
 import { AxiosResponse } from "axios";
+import { createHmac } from "crypto";
 import { ActionError, ErrorResult } from "../api/types";
+import config from "../config";
+import redisClient from "../database";
 import logger from "./logger";
 
 const UnixTime = (date: Date): number =>
@@ -34,4 +37,28 @@ const logAxiosResponse = (res: AxiosResponse<any>) => {
   );
 };
 
-export { UnixTime, getErrorResult, logAxiosResponse };
+const getUserHash = async (platformUserId: string): Promise<string> => {
+  const hmac = createHmac(config.hmacAlgorithm, config.hmacSecret);
+  hmac.update(platformUserId);
+  const hashedId = hmac.digest("base64");
+  const user = await redisClient.getAsync(hashedId);
+  if (!user) {
+    redisClient.client.SET(hashedId, platformUserId);
+  }
+  return hashedId;
+};
+
+const getUserTelegramId = async (
+  userHash: string
+): Promise<string | undefined> => {
+  const platformUserId = await redisClient.getAsync(userHash);
+  return platformUserId || undefined;
+};
+
+export {
+  UnixTime,
+  getErrorResult,
+  logAxiosResponse,
+  getUserHash,
+  getUserTelegramId
+};
