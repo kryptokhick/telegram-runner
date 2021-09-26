@@ -9,6 +9,12 @@ import logger from "../utils/logger";
 class MTProtoApi {
   private mtproto;
 
+  private user: any;
+
+  public getUser() {
+    return this.user;
+  }
+
   constructor() {
     this.mtproto = new MTProto({
       api_id: config.mtproto.apiId,
@@ -17,6 +23,14 @@ class MTProtoApi {
       storageOptions: {
         path: path.resolve(__dirname, "./data/1.json")
       }
+    });
+
+    this.call("users.getFullUser", {
+      id: {
+        _: "inputUserSelf"
+      }
+    }).then((user) => {
+      this.user = user;
     });
   }
 

@@ -6,6 +6,7 @@ import { fetchCommunitiesOfUser, getGroupName, leaveCommunity } from "./common";
 import config from "../config";
 import logger from "../utils/logger";
 import { getUserHash, logAxiosResponse } from "../utils/utils";
+import mtprotoApi from "../mtproto";
 
 const onMessage = async (ctx: any): Promise<void> => {
   if (ctx.message.chat.id > 0) {
@@ -127,8 +128,11 @@ const onUserJoinedGroup = async (ctx: any): Promise<void> => {
   });
 };
 
-const onUserLeftGroup = (ctx: any): void =>
-  ctx.reply(`Bye, ${ctx.message.left_chat_member.first_name} 😢`);
+const onUserLeftGroup = (ctx: any): void => {
+  if (mtprotoApi.getUser().user.id !== ctx.update.message.left_chat_member.id) {
+    ctx.reply(`Bye, ${ctx.message.left_chat_member.first_name} 😢`);
+  }
+};
 
 const onUserRemoved = async (
   platformUserId: string,
