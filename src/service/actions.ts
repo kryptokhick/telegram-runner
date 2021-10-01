@@ -1,6 +1,7 @@
 import { Markup } from "telegraf";
 import Bot from "../Bot";
 import mtprotoApi from "../mtproto";
+import logger from "../utils/logger";
 import { leaveCommunity } from "./common";
 
 const confirmLeaveCommunityAction = (ctx: any): void => {
@@ -25,26 +26,34 @@ const confirmedLeaveCommunityAction = (ctx: any): void => {
 };
 
 const createGroup = async (title: string) => {
+  logger.verbose(`createGroup ${title}`);
   const { username } = await Bot.Client.getMe();
   const userResult = await mtprotoApi.call("contacts.resolveUsername", {
     username
   });
+  logger.verbose(`userResult ${JSON.stringify(userResult)}`);
   const user_id = {
     _: "inputUser",
     user_id: userResult.users[0].id,
     access_hash: userResult.users[0].access_hash
   };
 
+  logger.verbose(`userResult ${user_id}`);
+
   const supergroupResult = await mtprotoApi.call("channels.createChannel", {
     megagroup: true,
     title
   });
+
+  logger.verbose(`supergroupResult ${JSON.stringify(supergroupResult)}`);
 
   const channel = {
     _: "inputChannel",
     channel_id: supergroupResult.chats[0].id,
     access_hash: supergroupResult.chats[0].access_hash
   };
+
+  logger.verbose(`channel ${JSON.stringify(channel)}`);
 
   await mtprotoApi.call("channels.inviteToChannel", {
     channel,
