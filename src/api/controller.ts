@@ -4,7 +4,7 @@ import { isMember, manageGroups } from "./actions";
 import { CreateGroupParam, IsMemberParam, ManageGroupsParam } from "./types";
 import { getErrorResult } from "../utils/utils";
 import logger from "../utils/logger";
-import { createGroup } from "../service/actions";
+import { createGroup, sendLoginCode, signIn } from "../service/actions";
 
 const controller = {
   upgrade: async (req: Request, res: Response): Promise<void> => {
@@ -79,6 +79,40 @@ const controller = {
 
     try {
       const result = await createGroup(params.title);
+      res.status(200).json(result);
+    } catch (err) {
+      const errorMsg = getErrorResult(err);
+      res.status(400).json(errorMsg);
+    }
+  },
+
+  sendLoginCode: async (req: Request, res: Response): Promise<void> => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const result = await sendLoginCode();
+      res.status(200).json(result);
+    } catch (err) {
+      const errorMsg = getErrorResult(err);
+      res.status(400).json(errorMsg);
+    }
+  },
+
+  signIn: async (req: Request, res: Response): Promise<void> => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+    }
+
+    const { phoneCode, phoneCodeHash } = req.body;
+
+    try {
+      const result = await signIn(phoneCode, phoneCodeHash);
       res.status(200).json(result);
     } catch (err) {
       const errorMsg = getErrorResult(err);

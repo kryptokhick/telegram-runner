@@ -1,5 +1,6 @@
 import { Markup } from "telegraf";
 import Bot from "../Bot";
+import config from "../config";
 import mtprotoApi from "../mtproto";
 import logger from "../utils/logger";
 import { leaveCommunity } from "./common";
@@ -82,8 +83,27 @@ const createGroup = async (title: string) => {
   return `-100${channel.channel_id}`;
 };
 
+const sendLoginCode = async () =>
+  mtprotoApi.call("auth.sendCode", {
+    phone_number: config.phoneNumber,
+    api_id: config.mtproto.apiId,
+    api_hash: config.mtproto.apiHash,
+    settings: {
+      _: "codeSettings"
+    }
+  });
+
+const signIn = async (phoneCode: string, phoneCodeHash: string) =>
+  mtprotoApi.call("auth.signIn", {
+    phone_number: config.phoneNumber,
+    phone_code: phoneCode,
+    phone_code_hash: phoneCodeHash
+  });
+
 export {
   confirmLeaveCommunityAction,
   confirmedLeaveCommunityAction,
-  createGroup
+  createGroup,
+  sendLoginCode,
+  signIn
 };

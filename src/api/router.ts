@@ -33,6 +33,17 @@ const createRouter = () => {
 
   router.post("/group", [validators.titleValidator], controller.createGroup);
 
+  router.get("/sendLoginCode", controller.sendLoginCode);
+
+  router.post(
+    "/signIn",
+    [
+      validators.notEmptyValidator("phoneCode"),
+      validators.notEmptyValidator("phoneCodeHash")
+    ],
+    controller.signIn
+  );
+
   return router;
 };
 

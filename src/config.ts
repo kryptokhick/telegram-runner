@@ -16,6 +16,7 @@ const telegramToken = process.env.BOT_TOKEN;
 const backendUrl = process.env.BACKEND_URL;
 const mtprotoApiId = process.env.MTPROTO_API_ID;
 const mtprotoApiHash = process.env.MTPROTO_API_HASH;
+const phoneNumber = process.env.PHONE_NUMBER;
 const api = {
   prefix: "/api",
   port: process.env.PORT || 8991
@@ -39,6 +40,9 @@ if (!mtprotoApiId)
 if (!mtprotoApiHash)
   throw new Error("You need to specify the MTPROTO_API_HASH in the .env file.");
 
+if (!mtprotoApiHash)
+  throw new Error("You need to specify the PHONE_NUMBER in the .env file.");
+
 export default {
   redisHost,
   hmacAlgorithm,
@@ -50,5 +54,6 @@ export default {
   mtproto: {
     apiId: mtprotoApiId,
     apiHash: mtprotoApiHash
-  }
+  },
+  phoneNumber
 };
