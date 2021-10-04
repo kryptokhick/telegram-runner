@@ -16,8 +16,8 @@ const getErrorResult = (error: Error): ErrorResult => {
     errorMsg = error.message;
     ids = error.ids;
   } else {
-    logger.error(error);
-    errorMsg = "unknown error";
+    errorMsg = JSON.stringify(error);
+    logger.error(errorMsg);
     ids = [];
   }
 

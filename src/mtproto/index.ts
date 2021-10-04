@@ -29,9 +29,13 @@ class MTProtoApi {
       id: {
         _: "inputUserSelf"
       }
-    }).then((user) => {
-      this.user = user;
-    });
+    })
+      .then((user) => {
+        this.user = user;
+      })
+      .catch((err) => {
+        logger.error(JSON.stringify(err));
+      });
   }
 
   async call(method: any, params: any, options = {}): Promise<any> {
