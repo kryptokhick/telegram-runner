@@ -1,4 +1,6 @@
 import { Markup } from "telegraf";
+import Bot from "../Bot";
+import mtprotoApi from "../mtproto";
 import logger from "../utils/logger";
 import { leaveCommunity } from "./common";
 
@@ -26,60 +28,60 @@ const confirmedLeaveCommunityAction = (ctx: any): void => {
 const createGroup = async (title: string) => {
   logger.verbose(`createGroup ${title}`);
   // TODO mtproto implementation
-  // const { username } = await Bot.Client.getMe();
-  // const userResult = await mtprotoApi.call("contacts.resolveUsername", {
-  //   username
-  // });
-  // logger.verbose(`userResult ${JSON.stringify(userResult)}`);
-  // const user_id = {
-  //   _: "inputUser",
-  //   user_id: userResult.users[0].id,
-  //   access_hash: userResult.users[0].access_hash
-  // };
+  const { username } = await Bot.Client.getMe();
+  const userResult = await mtprotoApi.call("contacts.resolveUsername", {
+    username
+  });
+  logger.verbose(`userResult ${JSON.stringify(userResult)}`);
+  const user_id = {
+    _: "inputUser",
+    user_id: userResult.users[0].id,
+    access_hash: userResult.users[0].access_hash
+  };
 
-  // logger.verbose(`userResult ${user_id}`);
+  logger.verbose(`userResult ${user_id}`);
 
-  // const supergroupResult = await mtprotoApi.call("channels.createChannel", {
-  //   megagroup: true,
-  //   title
-  // });
+  const supergroupResult = await mtprotoApi.call("channels.createChannel", {
+    megagroup: true,
+    title
+  });
 
-  // logger.verbose(`supergroupResult ${JSON.stringify(supergroupResult)}`);
+  logger.verbose(`supergroupResult ${JSON.stringify(supergroupResult)}`);
 
-  // const channel = {
-  //   _: "inputChannel",
-  //   channel_id: supergroupResult.chats[0].id,
-  //   access_hash: supergroupResult.chats[0].access_hash
-  // };
+  const channel = {
+    _: "inputChannel",
+    channel_id: supergroupResult.chats[0].id,
+    access_hash: supergroupResult.chats[0].access_hash
+  };
 
-  // logger.verbose(`channel ${JSON.stringify(channel)}`);
+  logger.verbose(`channel ${JSON.stringify(channel)}`);
 
-  // await mtprotoApi.call("channels.inviteToChannel", {
-  //   channel,
-  //   users: [user_id]
-  // });
+  await mtprotoApi.call("channels.inviteToChannel", {
+    channel,
+    users: [user_id]
+  });
 
-  // await mtprotoApi.call("channels.editAdmin", {
-  //   channel,
-  //   user_id,
-  //   admin_rights: {
-  //     _: "chatAdminRights",
-  //     change_info: true,
-  //     post_messages: true,
-  //     edit_messages: true,
-  //     delete_messages: true,
-  //     ban_users: true,
-  //     invite_users: true,
-  //     pin_messages: true,
-  //     add_admins: true
-  //   },
-  //   rank: "Medusa"
-  // });
+  await mtprotoApi.call("channels.editAdmin", {
+    channel,
+    user_id,
+    admin_rights: {
+      _: "chatAdminRights",
+      change_info: true,
+      post_messages: true,
+      edit_messages: true,
+      delete_messages: true,
+      ban_users: true,
+      invite_users: true,
+      pin_messages: true,
+      add_admins: true
+    },
+    rank: "Medusa"
+  });
 
-  // await mtprotoApi.call("channels.leaveChannel", { channel });
+  await mtprotoApi.call("channels.leaveChannel", { channel });
 
-  // return `-100${channel.channel_id}`;
-  return -1;
+  return `-100${channel.channel_id}`;
+  // return -1;
 };
 
 export {
