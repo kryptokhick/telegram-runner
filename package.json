@@ -4,6 +4,7 @@
   "description": "A Telegram bot for the Agora Space platform",
   "main": "index.js",
   "scripts": {
+    "login": "ts-node src/scripts/login.ts",
     "dev": "ts-node-dev src/Main.ts",
     "build": "tsc",
     "prod": "node build/Main.js"
