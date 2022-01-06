@@ -28,6 +28,7 @@ const confirmedLeaveCommunityAction = (ctx: any): void => {
 
 const createGroup = async (title: string) => {
   logger.verbose(`createGroup ${title}`);
+  // TODO mtproto implementation
   const { username } = await Bot.Client.getMe();
   const userResult = await mtprotoApi.call("contacts.resolveUsername", {
     username
@@ -81,6 +82,7 @@ const createGroup = async (title: string) => {
   await mtprotoApi.call("channels.leaveChannel", { channel });
 
   return `-100${channel.channel_id}`;
+  // return -1;
 };
 
 const sendLoginCode = async () =>

@@ -46,7 +46,7 @@ class MTProtoApi {
     } catch (error) {
       logger.error(`MTProto ${method} error: ${JSON.stringify(error)}`);
 
-      const { error_code, error_message } = error;
+      const { error_code, error_message } = error as any;
 
       if (error_code === 420) {
         const seconds = Number(error_message.split("FLOOD_WAIT_")[1]);
