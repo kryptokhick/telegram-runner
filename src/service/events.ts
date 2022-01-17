@@ -104,13 +104,11 @@ const onChatStart = async (
 };
 
 const onUserJoined = async (
-  refId: string,
   platformUserId: number,
   groupId: number
 ): Promise<void> => {
   try {
     const res = await axios.post(`${config.backendUrl}/user/joinedPlatform`, {
-      refId,
       platform: config.platform,
       platformUserId,
       groupId
@@ -182,7 +180,7 @@ const onChatMemberUpdate = (
         `chat: ${member.chat.id}, invite: ${invLink}`
     );
 
-    onUserJoined(invLink, member.from.id, member.chat.id);
+    onUserJoined(member.from.id, member.chat.id);
   }
 };
 
