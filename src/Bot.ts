@@ -40,6 +40,7 @@ export default class Bot {
     // event listeners
     bot.on("text", TGEvents.onMessage);
     bot.on("left_chat_member", TGEvents.onUserLeftGroup);
+    bot.on("chat_member", TGEvents.onChatMemberUpdate);
     bot.on("my_chat_member", TGEvents.onMyChatMemberUpdate);
 
     // action listeners
