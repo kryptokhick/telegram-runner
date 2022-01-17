@@ -1,11 +1,19 @@
 import axios from "axios";
-import { Markup } from "telegraf";
+import { Context, Markup, NarrowedContext } from "telegraf";
+import { Message, Update } from "typegram";
 import Bot from "../Bot";
 import { generateInvite } from "../api/actions";
-import { fetchCommunitiesOfUser, getGroupName, leaveCommunity } from "./common";
+import {
+  sendNotASuperGroup,
+  fetchCommunitiesOfUser,
+  getGroupName,
+  leaveCommunity,
+  sendMessageForSupergroup,
+  sendNotAnAdministrator
+} from "./common";
 import config from "../config";
 import logger from "../utils/logger";
-import { getUserHash, logAxiosResponse } from "../utils/utils";
+import { logAxiosResponse } from "../utils/utils";
 
 const onMessage = async (ctx: any): Promise<void> => {
   if (ctx.message.chat.id > 0) {
@@ -13,7 +21,7 @@ const onMessage = async (ctx: any): Promise<void> => {
       await ctx.reply("I'm sorry, but I couldn't interpret your request.");
       await ctx.replyWithMarkdown(
         "You can find more information on the " +
-          "[Agora](https://app.agora.space/) website."
+          "[Agora](https://agora.xyz/) website."
       );
     } catch (err) {
       logger.error(err);
@@ -21,18 +29,23 @@ const onMessage = async (ctx: any): Promise<void> => {
   }
 };
 
-const onChatStart = async (ctx: any): Promise<void> => {
+const onChatStart = async (
+  ctx: NarrowedContext<
+    Context,
+    {
+      message: Update.New & Update.NonChannel & Message.TextMessage;
+      update_id: number;
+    }
+  >
+): Promise<void> => {
   const { message } = ctx;
 
   if (message.chat.id > 0) {
-    if (new RegExp(/^\/start [0-9]+_[0-9]+$/).test(message.text)) {
-      const [refId, communityId] = message.text.split("/start ")[1].split("_");
-      const platformUserId = `${message.from.id}`;
+    if (new RegExp(/^\/start [a-z0-9]{64}$/).test(message.text)) {
+      const refId = message.text.split("/start ")[1];
+      const platformUserId = message.from.id;
 
       try {
-        const userHash = await getUserHash(platformUserId);
-        logger.verbose(`onChatStart userHash - ${userHash}`);
-
         await ctx.reply(
           "Thank you for joining, I'll send the invites as soon as possible."
         );
@@ -41,24 +54,28 @@ const onChatStart = async (ctx: any): Promise<void> => {
           `${config.backendUrl}/user/getAccessibleGroupIds`,
           {
             refId,
-            platform: config.platform,
-            platformUserId: userHash,
-            communityId
+            platformUserId
           }
         );
-
         logAxiosResponse(res);
+
+        if (res.data.length === 0) {
+          ctx.reply(
+            "There aren't any groups of this guild that you have access to."
+          );
+          return;
+        }
 
         const invites: { link: string; name: string }[] = [];
 
         await Promise.all(
           res.data.map(async (groupId: string) => {
-            const inviteLink = await generateInvite(groupId, userHash);
+            const inviteLink = await generateInvite(groupId, platformUserId);
 
             if (inviteLink !== undefined) {
               invites.push({
                 link: inviteLink,
-                name: await getGroupName(groupId)
+                name: await getGroupName(+groupId)
               });
             }
           })
@@ -75,7 +92,7 @@ const onChatStart = async (ctx: any): Promise<void> => {
           );
         } else {
           ctx.reply(
-            "You are already a member of the groups of this community " +
+            "You are already a member of the groups of this guild " +
               "so you will not receive any invite links."
           );
         }
@@ -88,17 +105,14 @@ const onChatStart = async (ctx: any): Promise<void> => {
 
 const onUserJoined = async (
   refId: string,
-  platformUserId: string,
-  groupId: string
+  platformUserId: number,
+  groupId: number
 ): Promise<void> => {
   try {
-    const userHash = await getUserHash(platformUserId);
-    logger.verbose(`onUserJoined userHash - ${userHash}`);
-
     const res = await axios.post(`${config.backendUrl}/user/joinedPlatform`, {
       refId,
       platform: config.platform,
-      platformUserId: userHash,
+      platformUserId,
       groupId
     });
 
@@ -110,23 +124,6 @@ const onUserJoined = async (
   }
 };
 
-const onUserJoinedGroup = async (ctx: any): Promise<void> => {
-  logger.verbose("function: onUseJoinedGroup");
-
-  ctx.message.new_chat_members.map(async (member: any) => {
-    if (member.id === ctx.botInfo.id) {
-      Bot.Client.sendMessage(
-        ctx.message.from.id,
-        `The ID of the group "${
-          (await getGroupName(ctx.message.chat.id)) as any
-        }":\n${ctx.message.chat.id}`
-      ).catch((e) =>
-        logger.error(`Error while calling onUserJoinedGroup:\n${e}`)
-      );
-    }
-  });
-};
-
 // eslint-disable-next-line no-unused-vars
 const onUserLeftGroup = (ctx: any): void => {
   // if (mtprotoApi.getUser().user.id !== ctx.update.message.left_chat_member.id) {
@@ -135,18 +132,15 @@ const onUserLeftGroup = (ctx: any): void => {
 };
 
 const onUserRemoved = async (
-  platformUserId: string,
+  platformUserId: number,
   groupId: string
 ): Promise<void> => {
   try {
-    const userHash = await getUserHash(platformUserId);
-    logger.verbose(`onUserRemoved userHash - ${userHash}`);
-
     const res = await axios.post(
       `${config.backendUrl}/user/removeFromPlatform`,
       {
         platform: config.platform,
-        platformUserId: userHash,
+        platformUserId,
         groupId
       }
     );
@@ -175,7 +169,9 @@ const onBlocked = async (ctx: any): Promise<void> => {
   }
 };
 
-const onChatMemberUpdate = (ctx: any): void => {
+const onChatMemberUpdate = (
+  ctx: NarrowedContext<Context, Update.ChatMemberUpdate>
+): void => {
   const member = ctx.update.chat_member;
 
   if (member.invite_link) {
@@ -190,9 +186,30 @@ const onChatMemberUpdate = (ctx: any): void => {
   }
 };
 
-const onMyChatMemberUpdate = (ctx: any): void => {
-  if (ctx.update.my_chat_member.new_chat_member?.status === "kicked") {
-    onBlocked(ctx);
+const onMyChatMemberUpdate = async (ctx: any): Promise<void> => {
+  try {
+    if (ctx.update.my_chat_member.new_chat_member?.status === "kicked") {
+      onBlocked(ctx);
+    }
+    if (
+      ctx.update.my_chat_member.new_chat_member?.status === "member" ||
+      ctx.update.my_chat_member.old_chat_member?.status === "member"
+    ) {
+      const groupId = ctx.update.my_chat_member.chat.id;
+      if (ctx.update.my_chat_member.chat.type !== "supergroup")
+        await sendNotASuperGroup(groupId);
+      else if (
+        ctx.update.my_chat_member.new_chat_member?.status === "administrator"
+      ) {
+        await Bot.Client.sendMessage(
+          groupId,
+          `The Guild Bot has administrator privileges from now! We are ready to roll!`
+        );
+        await sendMessageForSupergroup(groupId);
+      } else await sendNotAnAdministrator(groupId);
+    }
+  } catch (error) {
+    logger.error(`Error while calling onUserJoinedGroup:\n${error}`);
   }
 };
 
@@ -201,7 +218,6 @@ export {
   onChatMemberUpdate,
   onMyChatMemberUpdate,
   onUserJoined,
-  onUserJoinedGroup,
   onUserLeftGroup,
   onUserRemoved,
   onBlocked,

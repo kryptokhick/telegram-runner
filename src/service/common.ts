@@ -3,21 +3,21 @@ import { CommunityResult } from "../api/types";
 import Bot from "../Bot";
 import config from "../config";
 import logger from "../utils/logger";
-import { getUserHash, logAxiosResponse } from "../utils/utils";
+import { logAxiosResponse } from "../utils/utils";
 
-const getGroupName = async (groupId: string): Promise<string> =>
+const getGroupName = async (groupId: number): Promise<string> =>
   ((await Bot.Client.getChat(groupId)) as { title: string }).title;
 
 const fetchCommunitiesOfUser = async (
-  platformUserId: string
+  platformUserId: number
 ): Promise<CommunityResult[]> => {
   logger.verbose(
     `Called fetchCommunitiesOfUser, platformUserId=${platformUserId}`
   );
-  const userHash = await getUserHash(platformUserId);
-  logger.verbose(`fetchCommunitiesOfUser userHash - ${userHash}`);
 
-  const res = await axios.get(`${config.backendUrl}/communities/${userHash}`);
+  const res = await axios.get(
+    `${config.backendUrl}/communities/${platformUserId}`
+  );
 
   logAxiosResponse(res);
 
@@ -27,7 +27,7 @@ const fetchCommunitiesOfUser = async (
 };
 
 const leaveCommunity = async (
-  platformUserId: string,
+  platformUserId: number,
   communityId: string
 ): Promise<void> => {
   logger.verbose(
@@ -35,12 +35,10 @@ const leaveCommunity = async (
   );
 
   try {
-    const userHash = await getUserHash(platformUserId);
-    logger.verbose(`leaveCommunity userHash - ${userHash}`);
     const res = await axios.post(
       `${config.backendUrl}/user/removeFromPlatform`,
       {
-        platformUserId: userHash,
+        platformUserId,
         platform: config.platform,
         communityId,
         triggerKick: true
@@ -56,8 +54,8 @@ const leaveCommunity = async (
 };
 
 const kickUser = async (
-  groupId: string,
-  platformUserId: string,
+  groupId: number,
+  platformUserId: number,
   reason: string
 ): Promise<void> => {
   logger.verbose(
@@ -83,4 +81,38 @@ const kickUser = async (
   }
 };
 
-export { getGroupName, fetchCommunitiesOfUser, leaveCommunity, kickUser };
+const sendMessageForSupergroup = async (groupId: number) => {
+  const groupName = await getGroupName(groupId);
+  await Bot.Client.sendMessage(
+    groupId,
+    `This is the group ID of "${groupName}":\n \`${groupId}\` . Paste it to the Guild creation interface!`,
+    { parse_mode: "Markdown" }
+  );
+  await Bot.Client.sendPhoto(groupId, `${config.assets.groupIdImage}`);
+};
+
+const sendNotASuperGroup = async (groupId: number) => {
+  await Bot.Client.sendMessage(
+    groupId,
+    `This Group is currently not a Supergroup. Please convert your Group into Supergroup first. There is a tutorial GIF in the attachment.`
+  );
+  await Bot.Client.sendAnimation(groupId, `${config.assets.supergroupVideo}`);
+};
+
+const sendNotAnAdministrator = async (groupId: number) => {
+  await Bot.Client.sendMessage(
+    groupId,
+    `The Guildxyz_bot hasn't got the right permissions to manage this group. Please make sure, our Bot has administrator permissions.`
+  );
+  await Bot.Client.sendAnimation(groupId, `${config.assets.adminVideo}`);
+};
+
+export {
+  getGroupName,
+  fetchCommunitiesOfUser,
+  leaveCommunity,
+  kickUser,
+  sendNotASuperGroup,
+  sendMessageForSupergroup,
+  sendNotAnAdministrator
+};

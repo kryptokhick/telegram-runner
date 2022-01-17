@@ -1,20 +1,20 @@
 import axios from "axios";
-import { Markup } from "telegraf";
-import { InlineKeyboardButton } from "typegram";
+import { Context, Markup, NarrowedContext } from "telegraf";
+import { InlineKeyboardButton, Message, Update } from "typegram";
 import { LevelInfo } from "../api/types";
 import Bot from "../Bot";
 import { fetchCommunitiesOfUser } from "./common";
 import config from "../config";
 import logger from "../utils/logger";
-import { getUserHash, logAxiosResponse } from "../utils/utils";
+import { logAxiosResponse } from "../utils/utils";
 
 const helpCommand = (ctx: any): void => {
   const helpHeader =
     "Hello there! My name is Medousa.\n" +
-    "I'm part of the [Agora](https://agora-space.vercel.app/) project and " +
+    "I'm part of the [Agora](https://agora.xyz/) project and " +
     "I am your personal assistant.\n" +
-    "I will always let you know whether you can join a higher group or " +
-    "whether you were kicked from a group.\n";
+    "I will always let you know whether you can join a guild or " +
+    "whether you were kicked from a guild.\n";
 
   let commandsList =
     "/help - show instructions\n" +
@@ -23,7 +23,7 @@ const helpCommand = (ctx: any): void => {
 
   const helpFooter =
     "For more details about me read the documentation on " +
-    "[github](https://github.com/AgoraSpaceDAO/telegram-runner).";
+    "[github](https://github.com/agoraxyz/telegram-runner).";
 
   // DM
   if (ctx.message.chat.id >= 0) {
@@ -44,12 +44,9 @@ const helpCommand = (ctx: any): void => {
 
 const leaveCommand = async (ctx: any): Promise<void> => {
   try {
-    const platformUserId = `${ctx.message.from.id}`;
-    const userHash = await getUserHash(platformUserId);
-    logger.verbose(`leaveCommand userHash - ${userHash}`);
-
+    const platformUserId = ctx.message.from.id;
     const res = await axios.get(
-      `${config.backendUrl}/user/getUserCommunitiesByTelegramId/${userHash}`
+      `${config.backendUrl}/user/getUserCommunitiesByTelegramId/${platformUserId}`
     );
 
     logAxiosResponse(res);
@@ -115,18 +112,16 @@ const pingCommand = async (ctx: any): Promise<void> => {
 
 const statusUpdateCommand = async (ctx: any): Promise<void> => {
   const { message } = ctx.update;
-  const platformUserId = `${message.from.id}`;
+  const platformUserId = message.from.id;
   try {
     await ctx.reply(
       "I'll update your community accesses as soon as possible. (It could take up to 2 minutes.)"
     );
-    const userHash = await getUserHash(platformUserId);
-    logger.verbose(`statusUpdateCommand userHash - ${userHash}`);
 
     const res = await axios.post(
       `${config.backendUrl}/user/statusUpdate/`,
       {
-        telegramId: userHash
+        telegramId: platformUserId
       },
       { timeout: 150000 }
     );
@@ -155,11 +150,32 @@ const groupIdCommand = async (ctx: any): Promise<void> =>
     reply_to_message_id: ctx.update.message.message_id
   });
 
+const addCommand = async (
+  ctx: NarrowedContext<
+    Context,
+    {
+      message: Update.New & Update.NonChannel & Message.TextMessage;
+      update_id: number;
+    }
+  >
+): Promise<void> => {
+  await ctx.replyWithMarkdown(
+    "Click to add Medusa bot to your group",
+    Markup.inlineKeyboard([
+      Markup.button.url(
+        "Add Medusa",
+        "https://t.me/AgoraMatterBridgerBot?startgroup=true"
+      )
+    ])
+  );
+};
+
 export {
   helpCommand,
   leaveCommand,
   listCommunitiesCommand,
   pingCommand,
   statusUpdateCommand,
-  groupIdCommand
+  groupIdCommand,
+  addCommand
 };

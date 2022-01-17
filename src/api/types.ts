@@ -1,12 +1,12 @@
 // prettier-ignore
 type ManageGroupsParam = {
-  userHash: string;
+  platformUserId: number;
   groupIds      : string[];
   message       : string;
 };
 
 type IsMemberParam = {
-  userHash: string;
+  platformUserId: number;
   groupIds: string[];
 };
 
@@ -40,6 +40,11 @@ type CreateGroupParam = {
   title: string;
 };
 
+type IsInResult = {
+  ok: boolean;
+  message?: string;
+};
+
 export {
   ManageGroupsParam,
   IsMemberParam,
@@ -47,5 +52,6 @@ export {
   LevelInfo,
   ErrorResult,
   ActionError,
-  CreateGroupParam
+  CreateGroupParam,
+  IsInResult
 };
