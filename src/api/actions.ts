@@ -115,7 +115,7 @@ const manageGroups = async (
             kickUser(
               +groupId,
               platformUserId,
-              "have not fullfilled the requirements"
+              "have not fullfilled the requirements or left the guild through our website"
             );
           } else {
             result = false;
