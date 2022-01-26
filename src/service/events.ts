@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { Context, Markup, NarrowedContext } from "telegraf";
 import { Message, Update } from "typegram";
 import Bot from "../Bot";
@@ -50,13 +50,25 @@ const onChatStart = async (
           "Thank you for joining, I'll send the invites as soon as possible."
         );
 
-        const res = await axios.post(
-          `${config.backendUrl}/user/getAccessibleGroupIds`,
-          {
-            refId,
-            platformUserId
+        let res: AxiosResponse;
+        try {
+          res = await axios.post(
+            `${config.backendUrl}/user/getAccessibleGroupIds`,
+            {
+              refId,
+              platformUserId
+            }
+          );
+        } catch (error) {
+          if (error?.response?.data?.errors?.[0]?.msg === "deleted") {
+            ctx.reply(
+              "This invite link has expired. Please, start the joining process through the guild page again."
+            );
+            return;
           }
-        );
+          ctx.reply(`Something went wrong. (${new Date().toUTCString()})`);
+          return;
+        }
         logAxiosResponse(res);
 
         if (res.data.length === 0) {
