@@ -20,6 +20,7 @@ const api = {
 const supergroupVideo = process.env.SUPERGROUP_VIDEO_URL;
 const adminVideo = process.env.ADMIN_VIDEO_URL;
 const groupIdImage = process.env.GROUPID_IMAGE;
+const telegramBotId: number = 0;
 
 if (!telegramToken)
   throw new Error("You need to specify the bot's BOT_TOKEN in the .env file.");
@@ -46,5 +47,6 @@ export default {
     supergroupVideo,
     groupIdImage,
     adminVideo
-  }
+  },
+  telegramBotId
 };
