@@ -182,15 +182,16 @@ const onUserLeftGroup = async (ctx: any): Promise<void> => {
   }
 };
 
-const onChatMemberUpdate = (
+const onChatMemberUpdate = async (
   ctx: NarrowedContext<Context, Update.ChatMemberUpdate>
-): void => {
+) => {
   const member = ctx.update.chat_member;
 
   if (member.invite_link) {
     const invLink = member.invite_link.invite_link;
     logger.verbose(`join inviteLink ${invLink}`);
-    if (invLink.includes("?start=") && invLink.length === 96) {
+    const bot = await Bot.Client.getMe();
+    if (member.invite_link.creator.id === bot.id) {
       logger.verbose(
         `function: onChatMemberUpdate, user: ${member.from.id}, ` +
           `chat: ${member.chat.id}, invite: ${invLink}`
