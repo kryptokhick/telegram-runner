@@ -3,7 +3,6 @@ import { getGroupName, kickUser } from "../service/common";
 import Bot from "../Bot";
 import { IsInResult, ManageGroupsParam } from "./types";
 import logger from "../utils/logger";
-import config from "../config";
 
 const isMember = async (
   groupId: string,
@@ -144,7 +143,9 @@ const isIn = async (groupId: number): Promise<IsInResult> => {
     }
     const membership = await Bot.Client.getChatMember(
       groupId,
-      config.telegramBotId
+      (
+        await Bot.Client.getMe()
+      ).id
     );
     if (membership.status !== "administrator") {
       return {

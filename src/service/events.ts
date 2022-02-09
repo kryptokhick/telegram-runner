@@ -190,7 +190,8 @@ const onChatMemberUpdate = async (
   if (member.invite_link) {
     const invLink = member.invite_link.invite_link;
     logger.verbose(`join inviteLink ${invLink}`);
-    if (member.invite_link.creator.id === config.telegramBotId) {
+    const bot = await Bot.Client.getMe();
+    if (member.invite_link.creator.id === bot.id) {
       logger.verbose(
         `function: onChatMemberUpdate, user: ${member.from.id}, ` +
           `chat: ${member.chat.id}, invite: ${invLink}`
