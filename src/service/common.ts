@@ -82,7 +82,10 @@ const kickUser = async (
 };
 
 const sendMessageForSupergroup = async (groupId: number) => {
+  logger.verbose(`supergroup id: ${groupId}`);
   const groupName = await getGroupName(groupId);
+  logger.verbose(`supergroup name: ${groupName}`);
+
   await Bot.Client.sendMessage(
     groupId,
     `This is the group ID of "${groupName}":\n \`${groupId}\` . Paste it to the Guild creation interface!`,
