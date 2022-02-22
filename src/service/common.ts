@@ -82,9 +82,7 @@ const kickUser = async (
 };
 
 const sendMessageForSupergroup = async (groupId: number) => {
-  logger.verbose(`supergroup id: ${groupId}`);
   const groupName = await getGroupName(groupId);
-  logger.verbose(`supergroup name: ${groupName}`);
 
   await Bot.Client.sendMessage(
     groupId,
