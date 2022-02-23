@@ -1,12 +1,14 @@
 import axios from "axios";
 import { Context, Markup, NarrowedContext } from "telegraf";
 import { InlineKeyboardButton, Message, Update } from "typegram";
+import dayjs from "dayjs";
 import { LevelInfo } from "../api/types";
 import Bot from "../Bot";
 import { fetchCommunitiesOfUser } from "./common";
 import config from "../config";
 import logger from "../utils/logger";
-import { logAxiosResponse } from "../utils/utils";
+import { extractBackendErrorMessage, logAxiosResponse } from "../utils/utils";
+import pollStorage from "./pollStorage";
 
 const helpCommand = (ctx: any): void => {
   const helpHeader =
@@ -170,6 +172,194 @@ const addCommand = async (
   );
 };
 
+const newPoll = async (ctx: any): Promise<void> => {
+  try {
+    const memberStatus = (
+      await Bot.Client.getChatMember(ctx.message.chat.id, ctx.message.from.id)
+    ).status;
+
+    if (ctx.message.chat.type !== "supergroup") {
+      ctx.reply("Please use this command in a guild.");
+      return;
+    }
+
+    if (!(memberStatus === "creator" || memberStatus === "administrator")) {
+      ctx.reply("You are not an admin.");
+      return;
+    }
+
+    const userStep = pollStorage.getUserStep(ctx.message.from.id);
+    if (userStep) {
+      pollStorage.deleteMemory(ctx.message.from.id);
+    }
+
+    await Bot.Client.sendMessage(
+      ctx.message.from.id,
+      "Let's start creating your poll. You can use /reset or /cancel to restart or stop the process any time."
+    );
+
+    await Bot.Client.sendMessage(
+      ctx.message.from.id,
+      "First, send me the question of your poll.",
+      {
+        reply_markup: { force_reply: true }
+      }
+    );
+    pollStorage.initPoll(
+      ctx.message.from.id,
+      `${ctx.chat.id}:${ctx.message.message_id}`
+    );
+    pollStorage.setUserStep(ctx.message.from.id, 1);
+  } catch (err) {
+    logger.error(err);
+  }
+};
+
+const startPoll = async (ctx: any): Promise<void> => {
+  try {
+    if (ctx.message.chat.type !== "private") {
+      return;
+    }
+    if (pollStorage.getUserStep(ctx.message.from.id) < 4) {
+      Bot.Client.sendMessage(
+        ctx.message.from.id,
+        "A poll must have more than one option. Please send me a second one.",
+        {
+          reply_markup: { force_reply: true }
+        }
+      );
+      return;
+    }
+    const pollId = pollStorage.getPollId(ctx.message.from.id);
+    const poll = pollStorage.getPoll(pollId);
+    const chatId = pollId.split(";").pop().split(":")[0];
+
+    // for testing
+    logger.verbose(`chat: ${chatId}`);
+    logger.verbose(`poll: ${JSON.stringify(poll)}`);
+    logger.verbose(`pollId: ${pollId}`);
+
+    const voteButtonRow: { text: string; callback_data: string }[][] = [];
+    const listVotersButton = {
+      text: "List Voters",
+      callback_data: `${pollId};ListVoters`
+    };
+    const updateResultButton = {
+      text: "Update Result",
+      callback_data: `${pollId};UpdateResult`
+    };
+
+    let pollText = `${poll.question} \n`;
+
+    poll.options.forEach((option) => {
+      pollText = `${pollText}▫️${option}\n 0% \n`;
+      const button = [
+        {
+          text: option,
+          callback_data: `${option};${pollId}`
+        }
+      ];
+      voteButtonRow.push(button);
+    });
+    voteButtonRow.push([listVotersButton, updateResultButton]);
+
+    const duration = poll.date.split(":");
+
+    // for testing
+    logger.verbose(`duration: ${duration}`);
+
+    const startDate = dayjs().format("YYYY-MM-DD HH:mm");
+    const expDate = dayjs()
+      .add(parseInt(duration[0], 10), "day")
+      .add(parseInt(duration[1], 10), "hour")
+      .add(parseInt(duration[2], 10), "minute")
+      .format("YYYY-MM-DD HH:mm");
+
+    // for testing
+    logger.verbose(`startDate: ${startDate}`);
+    logger.verbose(`expDate: ${expDate}`);
+
+    const res = await axios.post(
+      `${config.backendUrl}/poll`,
+      {
+        id: pollId,
+        question: poll.question,
+        startDate,
+        expDate,
+        options: poll.options
+      },
+      { timeout: 150000 }
+    );
+
+    logAxiosResponse(res);
+
+    const inlineKeyboard = {
+      reply_markup: {
+        inline_keyboard: voteButtonRow
+      }
+    };
+
+    pollStorage.deleteMemory(ctx.message.from.id);
+
+    await Bot.Client.sendMessage(chatId, pollText, inlineKeyboard);
+  } catch (err) {
+    pollStorage.deleteMemory(ctx.message.from.id);
+    Bot.Client.sendMessage(
+      ctx.message.from.id,
+      "Something went wrong. Please try again or contact us."
+    );
+    const errorMessage = extractBackendErrorMessage(err);
+    if (errorMessage === "Poll can't be created for this guild.") {
+      await Bot.Client.sendMessage(ctx.message.from.id, errorMessage);
+    }
+    logger.error(err);
+  }
+};
+
+const resetPoll = async (ctx: any): Promise<void> => {
+  try {
+    if (ctx.message.chat.type !== "private") {
+      return;
+    }
+    if (pollStorage.getUserStep(ctx.message.from.id) > 0) {
+      const pollId = pollStorage.getPollId(ctx.message.from.id);
+      pollStorage.deleteMemory(ctx.message.from.id);
+      pollStorage.initPoll(ctx.message.from.id, pollId);
+      await Bot.Client.sendMessage(
+        ctx.message.from.id,
+        "The poll creation process has been reset. Now you can create a new poll. " +
+          "If you want to create a poll for a different group, use /cancel instead."
+      );
+      await Bot.Client.sendMessage(
+        ctx.message.from.id,
+        "First, send me the question of your poll.",
+        {
+          reply_markup: { force_reply: true }
+        }
+      );
+    }
+  } catch (err) {
+    logger.error(err);
+  }
+};
+
+const cancelPoll = async (ctx: any): Promise<void> => {
+  try {
+    if (ctx.message.chat.type !== "private") {
+      return;
+    }
+    if (pollStorage.getUserStep(ctx.message.from.id) > 0) {
+      pollStorage.deleteMemory(ctx.message.from.id);
+      await Bot.Client.sendMessage(
+        ctx.message.from.id,
+        "The poll creation process has been cancelled. Use /poll to create a new poll."
+      );
+    }
+  } catch (err) {
+    logger.error(err);
+  }
+};
+
 export {
   helpCommand,
   leaveCommand,
@@ -177,5 +367,9 @@ export {
   pingCommand,
   statusUpdateCommand,
   groupIdCommand,
-  addCommand
+  addCommand,
+  newPoll,
+  startPoll,
+  resetPoll,
+  cancelPoll
 };
