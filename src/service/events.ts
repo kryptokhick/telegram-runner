@@ -174,6 +174,7 @@ const onChatStart = async (
         );
 
         let res: AxiosResponse;
+        logger.verbose(`onChatStart join - ${refId} ${platformUserId}`);
         try {
           res = await axios.post(
             `${config.backendUrl}/user/getAccessibleGroupIds`,
@@ -189,6 +190,7 @@ const onChatStart = async (
             );
             return;
           }
+          logger.error(`${JSON.stringify(error)}`);
           ctx.reply(`Something went wrong. (${new Date().toUTCString()})`);
           return;
         }
