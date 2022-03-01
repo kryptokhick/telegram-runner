@@ -7,8 +7,13 @@ import Bot from "../Bot";
 import { fetchCommunitiesOfUser } from "./common";
 import config from "../config";
 import logger from "../utils/logger";
-import { extractBackendErrorMessage, logAxiosResponse } from "../utils/utils";
+import {
+  extractBackendErrorMessage,
+  logAxiosResponse,
+  pollBildResponse
+} from "../utils/utils";
 import pollStorage from "./pollStorage";
+import { Poll } from "./types";
 
 const helpCommand = (ctx: any): void => {
   const helpHeader =
@@ -195,20 +200,11 @@ const newPoll = async (ctx: any): Promise<void> => {
 
     await Bot.Client.sendMessage(
       ctx.message.from.id,
-      "Let's start creating your poll. You can use /reset or /cancel to restart or stop the process any time."
+      "Let's start creating your poll. You can use /reset or /cancel to restart or stop the process any time.\n\n" +
+        "First, send me the question of your poll."
     );
 
-    await Bot.Client.sendMessage(
-      ctx.message.from.id,
-      "First, send me the question of your poll.",
-      {
-        reply_markup: { force_reply: true }
-      }
-    );
-    pollStorage.initPoll(
-      ctx.message.from.id,
-      `${ctx.chat.id}:${ctx.message.message_id}`
-    );
+    pollStorage.initPoll(ctx.message.from.id, ctx.chat.id.toString());
     pollStorage.setUserStep(ctx.message.from.id, 1);
   } catch (err) {
     logger.error(err);
@@ -220,60 +216,29 @@ const startPoll = async (ctx: any): Promise<void> => {
     if (ctx.message.chat.type !== "private") {
       return;
     }
-    if (pollStorage.getUserStep(ctx.message.from.id) < 4) {
-      Bot.Client.sendMessage(
-        ctx.message.from.id,
-        "A poll must have more than one option. Please send me a second one.",
-        {
-          reply_markup: { force_reply: true }
-        }
-      );
+    if (await pollBildResponse(ctx.message.from.id)) {
       return;
     }
-    const pollId = pollStorage.getPollId(ctx.message.from.id);
-    const poll = pollStorage.getPoll(pollId);
-    const chatId = pollId.split(";").pop().split(":")[0];
+    const poll = pollStorage.getPoll(ctx.message.from.id);
+    const { chatId } = poll;
 
     // for testing
     logger.verbose(`chat: ${chatId}`);
     logger.verbose(`poll: ${JSON.stringify(poll)}`);
-    logger.verbose(`pollId: ${pollId}`);
 
     const voteButtonRow: { text: string; callback_data: string }[][] = [];
-    const listVotersButton = {
-      text: "List Voters",
-      callback_data: `${pollId};ListVoters`
-    };
-    const updateResultButton = {
-      text: "Update Result",
-      callback_data: `${pollId};UpdateResult`
-    };
-
-    let pollText = `${poll.question} \n`;
-
-    poll.options.forEach((option) => {
-      pollText = `${pollText}▫️${option}\n 0% \n`;
-      const button = [
-        {
-          text: option,
-          callback_data: `${option};${pollId}`
-        }
-      ];
-      voteButtonRow.push(button);
-    });
-    voteButtonRow.push([listVotersButton, updateResultButton]);
 
     const duration = poll.date.split(":");
 
     // for testing
     logger.verbose(`duration: ${duration}`);
 
-    const startDate = dayjs().format("YYYY-MM-DD HH:mm");
+    const startDate = dayjs().unix();
     const expDate = dayjs()
       .add(parseInt(duration[0], 10), "day")
       .add(parseInt(duration[1], 10), "hour")
       .add(parseInt(duration[2], 10), "minute")
-      .format("YYYY-MM-DD HH:mm");
+      .unix();
 
     // for testing
     logger.verbose(`startDate: ${startDate}`);
@@ -282,7 +247,7 @@ const startPoll = async (ctx: any): Promise<void> => {
     const res = await axios.post(
       `${config.backendUrl}/poll`,
       {
-        id: pollId,
+        groupId: poll.chatId,
         question: poll.question,
         startDate,
         expDate,
@@ -293,15 +258,72 @@ const startPoll = async (ctx: any): Promise<void> => {
 
     logAxiosResponse(res);
 
+    const storedPoll: Poll = res.data;
+
+    let pollText = `${poll.question}\n\n`;
+
+    poll.options.forEach((option) => {
+      pollText = `${pollText}${option}\n▫️0%\n\n`;
+      const button = [
+        {
+          text: option,
+          callback_data: `${option};${storedPoll.id};Vote`
+        }
+      ];
+      voteButtonRow.push(button);
+    });
+    pollText = pollText.concat(`👥 0 person voted so far.`);
+
+    pollText = pollText.concat(
+      `\n\nPoll ends on ${dayjs
+        .unix(expDate)
+        .utc()
+        .format("YYYY-MM-DD HH:mm UTC")}`
+    );
+
     const inlineKeyboard = {
       reply_markup: {
         inline_keyboard: voteButtonRow
       }
     };
 
-    pollStorage.deleteMemory(ctx.message.from.id);
+    const message = await Bot.Client.sendMessage(
+      chatId,
+      pollText,
+      inlineKeyboard
+    );
 
-    await Bot.Client.sendMessage(chatId, pollText, inlineKeyboard);
+    const listVotersButton = {
+      text: "List Voters",
+      callback_data: `${message.chat.id}:${message.message_id};${storedPoll.id};ListVoters`
+    };
+    const updateResultButton = {
+      text: "Update Result",
+      callback_data: `${message.chat.id}:${message.message_id};${storedPoll.id};UpdateResult`
+    };
+
+    const adminMessage = await Bot.Client.sendMessage(
+      ctx.message.from.id,
+      pollText,
+      {
+        reply_markup: {
+          inline_keyboard: [[listVotersButton, updateResultButton]]
+        }
+      }
+    );
+
+    const pollTextRes = await axios.post(
+      `${config.backendUrl}/poll/pollText`,
+      {
+        pollId: storedPoll.id,
+        adminTextId: `${ctx.message.from.id}:${adminMessage.message_id}`
+      },
+      { timeout: 150000 }
+    );
+
+    logAxiosResponse(pollTextRes);
+
+    pollStorage.deleteMemory(ctx.message.from.id);
   } catch (err) {
     pollStorage.deleteMemory(ctx.message.from.id);
     Bot.Client.sendMessage(
@@ -322,20 +344,15 @@ const resetPoll = async (ctx: any): Promise<void> => {
       return;
     }
     if (pollStorage.getUserStep(ctx.message.from.id) > 0) {
-      const pollId = pollStorage.getPollId(ctx.message.from.id);
+      const poll = pollStorage.getPoll(ctx.message.from.id);
       pollStorage.deleteMemory(ctx.message.from.id);
-      pollStorage.initPoll(ctx.message.from.id, pollId);
+      pollStorage.initPoll(ctx.message.from.id, poll.chatId);
+      pollStorage.setUserStep(ctx.message.from.id, 1);
       await Bot.Client.sendMessage(
         ctx.message.from.id,
         "The poll creation process has been reset. Now you can create a new poll. " +
-          "If you want to create a poll for a different group, use /cancel instead."
-      );
-      await Bot.Client.sendMessage(
-        ctx.message.from.id,
-        "First, send me the question of your poll.",
-        {
-          reply_markup: { force_reply: true }
-        }
+          "If you want to create a poll for a different group, use /cancel instead. \n\n" +
+          "First, send me the question of your poll."
       );
     }
   } catch (err) {
