@@ -107,7 +107,10 @@ const updatePollText = async (poll: Poll): Promise<string> => {
   return newPollText;
 };
 
-const createVoteListText = async (ctx: any, poll: Poll): Promise<string> => {
+const createVoteListText = async (
+  chatId: string,
+  poll: Poll
+): Promise<string> => {
   let allVotes: number = 0;
   let pollText: string = "Results:\n";
 
@@ -145,7 +148,7 @@ const createVoteListText = async (ctx: any, poll: Poll): Promise<string> => {
       await Promise.all(
         votes.map(async (vote) => {
           const ChatMember = await Bot.Client.getChatMember(
-            ctx.update.callback_query.message.chat.id,
+            chatId,
             parseInt(vote.tgId, 10)
           ).catch(() => undefined);
 

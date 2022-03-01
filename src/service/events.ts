@@ -446,7 +446,7 @@ const onCallbackQuery = async (ctx: any): Promise<void> => {
 
       poll = pollResponse.data;
 
-      const responseText = await createVoteListText(ctx, poll);
+      const responseText = await createVoteListText(chatId, poll);
 
       await Bot.Client.sendMessage(
         ctx.update.callback_query.from.id,
